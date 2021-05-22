@@ -23,7 +23,7 @@ const HeaderExternalLinks = () => {
             if (icon) {
               linkContent = <FontAwesomeIcon size="lg" icon={icon}/>
             }
-            return <TLink target="_blank" key={link.url} href={link.url}>
+            return <TLink target="_blank" title={link.name} key={link.name} href={link.url}>
               {linkContent}
             </TLink>
           })}

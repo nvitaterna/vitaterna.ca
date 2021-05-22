@@ -1,12 +1,12 @@
 require(`dotenv`).config({
   path: `.env`,
-})
+});
 
-const shouldAnalyseBundle = process.env.ANALYSE_BUNDLE
+const shouldAnalyseBundle = process.env.ANALYSE_BUNDLE;
 
 module.exports = {
   siteMetadata: {
-    siteTitle: 'Nicolas Vitaterna',
+    siteTitle: "Nicolas Vitaterna",
     siteTitleAlt: `Minimal Blog - Gatsby Theme`,
   },
   plugins: [
@@ -14,6 +14,7 @@ module.exports = {
       resolve: `@lekoarts/gatsby-theme-minimal-blog`,
       // See the theme's README for all available options
       options: {
+        mdx: false,
         navigation: [
           {
             title: `Blog`,
@@ -30,8 +31,8 @@ module.exports = {
             url: `https://github.com/nvitaterna`,
           },
           {
-            name: 'Stack Overflow',
-            url: 'https://stackoverflow.com/users/2318336/nvitaterna'
+            name: "Stack Overflow",
+            url: "https://stackoverflow.com/users/2318336/nvitaterna",
           },
         ],
       },
@@ -70,6 +71,33 @@ module.exports = {
     `gatsby-plugin-offline`,
     `gatsby-plugin-gatsby-cloud`,
     `gatsby-plugin-netlify`,
+    {
+      resolve: `gatsby-plugin-mdx`,
+      options: {
+        extensions: [`.mdx`, `.md`],
+        gatsbyRemarkPlugins: [
+          "gatsby-remark-autolink-headers",
+          {
+            resolve: `gatsby-remark-images`,
+            options: {
+              maxWidth: 960,
+              quality: 90,
+              linkImagesToOriginal: false,
+            },
+          },
+        ],
+        plugins: [
+          {
+            resolve: `gatsby-remark-images`,
+            options: {
+              maxWidth: 960,
+              quality: 90,
+              linkImagesToOriginal: false,
+            },
+          },
+        ],
+      },
+    },
     shouldAnalyseBundle && {
       resolve: `gatsby-plugin-webpack-bundle-analyser-v2`,
       options: {
@@ -79,4 +107,4 @@ module.exports = {
       },
     },
   ].filter(Boolean),
-}
+};
