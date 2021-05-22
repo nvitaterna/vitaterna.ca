@@ -1,5 +1,5 @@
 ---
-title: NX React Apollo Nexus Prisma GraphQL Starter
+title: Nx React Apollo Nexus Prisma GraphQL Starter
 date: 2021-05-25
 description: ''
 tags:
@@ -11,3 +11,80 @@ tags:
   - nexus
   - apollo
 ---
+
+import Link from '../../../src/components/link';
+
+To start off, I'd like to credit <Link to="https://blog.nrwl.io/using-apollo-graphql-with-react-in-an-nx-workspace-99db8d69cebe">this walkthrough</Link> for giving me a quick rundown on setting up an application in Nx:
+
+> Nx is a set of extensible dev tools for monorepos. Because of the robust support for a diverse ecosystem of JavaScript development, it enables you to build your entire full-stack application in a single repo. This allows you to share code and interfaces between your frontend and backend and acts as a multiplier on your development velocity.
+
+This will follow a similar structure, while making changes to the workflow to play nice with <Link to="https://nexusjs.org/">Nexus</Link> and <Link to="https://www.prisma.io/">Prisma</Link>. In this article, you will build a basic 'Todo' GraphQL API that is consumed by a React frontend. This will all be contained in a Nx workspace in a single directory.
+
+Just as a heads-up - my environment is Ubuntu 20.04.1 in WSL2, and I'll be using Node v 14.17.0 and yarn 1.22.10. I'll be using `todo-starter` as the project name - though you can use whatever name you'd like.
+
+## Create a new workspace
+
+Start by creating an Nx workspace:
+
+```bash
+npx create-nx-workspace todo-starter --package-manager yarn
+```
+
+You'll be prompted with some questions, so here's what I'll be using:
+
+```
+? What to create in the new workspace
+> react-express     [a workspace with a full stack application (React + Express)]
+
+? Application name
+> todo-app
+
+? Default stylesheet format
+> SASS(.scss)  [ http://sass-lang.com   ]
+
+? Use Nx Cloud? (It's free and doesn't require registration.)
+> No
+```
+
+After these selections have been made, the Nx CLI will creat your workspace. Let's enter our new workspace:
+
+```bash
+cd todo-starter
+```
+
+For the rest of the walkthrough, we'll consider this as our "root" directory.
+
+## Preparation
+
+We will install dependecies as we go to try and make it obvious as to why we are installing them. We'll also move files here and there before setting up our workflow.
+
+
+### Setting up the Prisma CLI
+
+First, we'll start with adding the `prisma` cli. This will only be needed for development, so we will install it as a development dependency via the `-D` flag:
+
+```bash
+yarn add prisma -D
+```
+
+We will start by using the `prisma init` command to initialize our prisma schema:
+
+```bash
+yarn prisma init
+```
+
+This will create a new directory called `prisma` in our root which contains a `schema.prisma` file. It will also create a `.env` file in our root directory. 
+
+Since we do not want to clutter our workspace, we will create a new library via Nx to contain this:
+
+```bash
+yarn nx generate @nrwl/node:library prisma-client
+```
+
+This will create a new library in `libs/prisma-client`. Note that you will also have an `api-interfaces` library - we will remove that later, just ignore it for now.
+
+Move the `prisma` folder into the `prisma-client` library:
+
+```bash
+mv prisma libs/prisma-client
+```
