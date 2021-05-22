@@ -65,9 +65,9 @@ cd todo-starter
 
 For the rest of the walkthrough, you will consider this as the "root" directory.
 
-## Prisma Schema, Database Migration, and type Generation
+## Prisma
 
-First, you'll add the `prisma` cli. This will only be needed for development, so install it as a development dependency via the `-D` flag. You'll also install the prisma client as it will be needed to actually make the queries to your database:
+First, you'll add the `prisma` cli. This will only be needed for development, so install it as a development dependency via the `-D` flag. You'll also need the prisma client as a regular dependency:
 
 ```bash noLineNumbers
 yarn add prisma -D
@@ -90,10 +90,20 @@ yarn nx generate @nrwl/node:library prisma-client
 
 This will create a new library in `libs/prisma-client`. Note that you will also have an `api-interfaces` library - you'll remove that later, just ignore it for now.
 
-Move the `prisma` folder into the `prisma-client` library:
+Move the `prisma` directory into the `prisma-client` library:
 
 ```bash noLineNumbers
 mv prisma libs/prisma-client
+```
+
+Since you've moved the schema from it's default location, let the prisma client know that by adding this to the end of your `package.json` file:
+
+```json:title=package.json
+{
+  "prisma": {
+    "schema": "libs/prisma-client/prisma/schema.prisma"
+  }
+}
 ```
 
 Edit the `schema.prisma` as so:
@@ -109,7 +119,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/lib"
+  output   = "../src"
 }
 
 model TodoItem {
@@ -119,7 +129,7 @@ model TodoItem {
 }
 ```
 
-You will use `sqlite` as the datasource to avoid the need to spin up a server. Set the output to a relative folder in the library. By default this gets output to your `node modules` folder. By putting it into this library's source code, it allows Nx to track when changes are made (more on why this matters later on). You are also creating a basic `TodoItem` model using Prisma's schema syntax.
+You will use `sqlite` as the datasource to avoid the need to spin up a server. Set the output to a relative directory in the library. By default this gets output to your `node modules` directory. By putting it into this library's source code, it allows Nx to track when changes are made (more on why this matters later on). You are also creating a basic `TodoItem` model using Prisma's schema syntax.
 
 You can also go ahead and modify the `.env` file that was created by prisma, with an sqlite file url. An absolute path is recommended:
 
@@ -133,34 +143,42 @@ You can also go ahead and modify the `.env` file that was created by prisma, wit
 DATABASE_URL="file:/tmp/todo-starter/todo.db"
 ```
 
-You can create your your database with the `prisma migrate` command as shown <Link to="https://www.prisma.io/docs/concepts/components/prisma-migrate">here</Link>. This will create your database in the `DATABASE_URL` location you specified above. This command will also create a migrations folder that is used to keep your database in sync with your schema:
+You can create your your database with the `prisma migrate` command as shown <Link to="https://www.prisma.io/docs/concepts/components/prisma-migrate">here</Link>. This will create your database in the `DATABASE_URL` location you specified above. This command will also create a migrations directory that is used to keep your database in sync with your schema:
 
 ```bash noLineNumbers
-yarn prisma migrate dev --name init --schema libs/prisma-client/prisma/schema.prisma
+yarn prisma migrate dev --name init
 ```
 
-Now that your database is setup, you'll continue with setting up the client. Remove the existing lib folder in the prisma-client library:
+Now that your database is setup, you'll continue with setting up the client. Remove the existing src directory in the prisma-client library:
 
 ```bash noLineNumbers
-rm -rf libs/prisma-client/src/lib
+rm -r libs/prisma-client/src
 ```
 
 Run the following command to populate that directory with your generated prisma client. The `schema` argument is required as prisma is no longer in the default location:
 
 ```bash noLineNumbers
-yarn prisma generate --schema libs/prisma-client/prisma/schema.prisma
+yarn prisma generate
 ```
 
-You can read more about what prisma generates <Link to="">here</Link>. Modify the prisma-client library's index file to point to these generated files:
-
-```ts:title=libs/prisma-client/src/index.ts
-export * from './lib';
-```
-
-These generated files do not need to be commited to your repository. Create a `.gitignore` file in the `prisma-client` library:
+You can read more about what prisma generates <Link to="">here</Link>. These generated files do not need to be commited to your repository. Create a `.gitignore` file in the `prisma-client` library:
 
 ```gitignore:title=libs/prisma-client/.gitignore
-src/lib
+src
+```
+
+You also need to modify the base tsconfig file to make typescript play nice with imports:
+
+
+```json:title=tsconfig.base.json {5}
+{
+  "compilerOptions": {
+    "paths": {
+      "@todo-starter/api-interfaces": ["libs/api-interfaces/src/index.ts"],
+      "@todo-starter/prisma-client": ["libs/prisma-client/src"]
+    }
+  }
+}
 ```
 
 ## API
@@ -193,7 +211,7 @@ You'll also need to add the nexus typings to your api:
 }
 ```
 
-Make a new folder in your api app to keep your graphql code organized:
+Make a new directory in your api app to keep your graphql code organized:
 
 ```bash noLineNumbers
 mkdir apps/api/src/graphql
@@ -231,7 +249,7 @@ export const schema = makeSchema({
   ],
   outputs: {
     schema: path.join(__dirname, '../generated/schema.graphql'),
-    typegen: path.join(__dirname, '../generated/nexus.d.ts'),
+    typegen: path.join(__dirname, '../generated/nexus.ts'),
   },
   contextType: {
     module: path.join(process.cwd(), 'apps/api/src/graphql/context.ts'),
@@ -242,6 +260,12 @@ export const schema = makeSchema({
 ```
 
 So there is quite a bit going on here. In general - you'd normally be using relative paths for most of this. In most cases you don't have to specify where the prisma client is either. Since we are in a monorepo and everything is run from the root directory you need to use absolute paths. You can read more about the nexus schema options in <Link to="https://nexusjs.org/docs/guides/schema">this guide</Link> from nexusjs.org.
+
+Once again, these generated files do not need to be commited to your repository. Create a `.gitignore` file in the `api` app:
+
+```gitignore:title=apps/api/.gitignore
+src/generated
+```
 
 You'll notice the empty types array - you'll be populating that soon. Let's start by running ts-node to have nexus generate some files for us:
 
@@ -271,8 +295,6 @@ export const todoItemTypes = [
   }),
   mutationField((t) => {
     t.crud.createOneTodoItem();
-    t.crud.deleteOneTodoItem();
-    t.crud.updateOneTodoItem();
   }),
 ];
 
@@ -329,7 +351,7 @@ You still can't query your newly made graphql schema - as it isn't connected to 
 yarn add apollo-server-express
 ```
 
-Create a new file in your `graphql` folder with the following to set up the prisma client - you'll need to feed this to apollo's context function:
+Create a new file in your `graphql` directory with the following to set up the prisma client - you'll need to feed this to apollo's context function:
 
 ```ts:title=apps/api/src/graphql/prisma.ts
 import { PrismaClient } from '@todo-starter/prisma-client';
@@ -371,6 +393,7 @@ const server = app.listen(port, () => {
 });
 server.on('error', console.error);
 ```
+
 Nx already has plenty of convenience scripts setup for you so go ahead and run the following to start your api:
 
 ```bash noLineNumbers
@@ -378,3 +401,257 @@ yarn start api
 ```
 
 By default, the app listens on port 3333. Go to <Link to="http://localhost:3333/graphql">http://localhost:3333/graphql</Link> and you will see apollo's graphql playground with your queries, mutations, and types ready to go.
+
+There is an issue - if you try making a query, you'll get an error from prisma. Let's fix that now by telling nx to copy over the generated prisma schema file to the dist directory it runs the api from.
+
+In `workspace.json`, find the block in the `projects` property for your `api` app. Modify the existing `build` target as so. You'll be adding the prisma schema as another asset:
+
+```json:title=workspace.json noLineNumbers {9-13}
+{
+  "projects": {
+    "api": {
+      "targets": {
+        "build": {
+          "options": {
+            "assets": [
+              "apps/api/src/assets",
+              {
+                "glob": "*",
+                "input": "libs/prisma-client/prisma",
+                "output": "."
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Start your api again - and you'll notice it's working now. You can open up the `dist/apps/api` directory and see that the prisma schema has been copied properly.
+
+## Data Access
+
+Let's start with adding some more packages. You'll be using these to generate typings for your frontend application as seen on<Link to="https://www.graphql-code-generator.com/docs/plugins/typescript-react-apollo">graphql-code-generator.com</Link>:
+
+```bash noLineNumbers
+yarn add -D @graphql-codegen/cli \
+  @graphql-codegen/typescript-operations \
+  @graphql-codegen/typescript-react-apollo
+```
+
+You will now create a react library that the frontend will use to consume your api. Do so via the following comand:
+
+```bash noLineNumbers
+yarn nx generate @nrwl/react:library data-access
+```
+
+This will create another library in your libs directory called `data-access`. Let's start by adding a `codegen.yml` file:
+
+```yml:title=libs/data-access/codegen.yml
+overwrite: true
+schema: 'apps/api/src/generated/schema.graphql'
+generates:
+  libs/data-access/src/index.tsx:
+    documents: 'libs/data-access/graphql/**/*.graphql'
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+```
+
+Since you are using an index.tsx file instad of index.ts - you need to modify the base tsconfig to point to it correctly. Remove the extension as you did earlier for the prisma client:
+
+```json:title=tsconfig.base.json {6}
+{
+  "compilerOptions": {
+    "paths": {
+      "@todo-starter/api-interfaces": ["libs/api-interfaces/src/index.ts"],
+      "@todo-starter/prisma-client": ["libs/prisma-client/src"],
+      "@todo-starter/data-access": ["libs/data-access/src"]
+    }
+  }
+}
+```
+
+Note that you are referencing the generated schema file from earlier relative to the _root_ directory. This will be a common theme when working with Nx. You are also referencing a graphql directory that has not been created - so create that now:
+
+```bash noLineNumbers
+mkdir libs/data-access/graphql
+```
+
+> If you are using VS Code, <Link to="https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql">this graphql extension</Link> is great a time saver. It provides autocompletion and validation when writing queries in graphql files. First install the extension, then add a `graphql.config.json` file in your root:
+>
+> ```json:title=graphql.config.json
+> {
+>   "schema": "apps/api/src/generated/schema.graphql",
+>   "extensions": {
+>     "endpoints": {
+>       "default": {
+>         "url": "http://localhost:3333/grasdfaphql"
+>       }
+>     }
+>   }
+> }
+> ```
+>
+> With this set up, you will also be able to test queries directly in VS Code as long as your api is running. You'll see the code completion in action below.
+
+Create a new `todo-item.graphql` file in there with the following. This will give you a few queries that the frontend can use to consume your api:
+
+```graphql:title=libs/data-access/graphql/todo-item.graphql
+query TodoItem($id: Int!) {
+  todoItem(where: { id: $id }) {
+    id
+    text
+    done
+  }
+}
+
+query TodoItems {
+  todoItems {
+    id
+    text
+    done
+  }
+}
+
+mutation CreateOneTodoItem($text: String!, $done: Boolean = false) {
+  createOneTodoItem(data: { text: $text, done: $done }) {
+    id
+    text
+    done
+  }
+}
+
+mutation DeleteOneTodoItem($id: Int!) {
+  deleteOneTodoItem(where: { id: $id }) {
+    id
+  }
+}
+
+mutation UpdateOneTodoItem($id: Int!, $text: String!, $done: Boolean = false) {
+  updateOneTodoItem(
+    data: { text: { set: $text }, done: { set: $done } }
+    where: { id: $id }
+  ) {
+    id
+    text
+    done
+  }
+}
+```
+
+Now you can go ahead and generate your typings using codegen. Before you do that, delete the `src` directory in your data-access library:
+
+```bash noLineNumbers
+rm -r libs/data-access/src
+```
+
+You'll also install the apollo client now, as the generated file will rely on it:
+
+```bash noLineNumbers
+yarn add @apollo/client
+```
+
+Now generate files for the frontend:
+
+```bash noLineNumbers
+yarn graphql-codegen --config libs/data-access/codegen.yml
+```
+
+This file is generated based on your `graphql.schema` file and the queries you created above. It gives you everything you need to consume your api on the frontend.
+
+Now is a good time to move on to the frontend as our api and data access is ready.
+
+## React Client
+
+You'll build a few components to create, modify, and delete todo items.
+
+You will need to setup the apollo client first. Create a file in the `wep-app` `src` directory:
+
+```ts:title=apps/web-app/src/apollo-client.ts
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+
+export const client = new ApolloClient({
+  uri: '/api/graphql',
+  cache: new InMemoryCache(),
+});
+```
+
+> When you initally setup this application using Nx, it created a proxy config for you in your `web-app` directory. It will automatically proxy any requests on `/api` to your api.
+
+Now go ahead and add the `ApolloProvider` component to your main application so you can use the hooks that the previous code generation created for you:
+
+```ts:title=apps/web-app/src/main.tsx {1,10,12}
+import { ApolloProvider } from '@apollo/client';
+import { StrictMode } from 'react';
+import * as ReactDOM from 'react-dom';
+import { client } from './apollo-client';
+
+import App from './app/app';
+
+ReactDOM.render(
+  <StrictMode>
+    <ApolloProvider client={client}>
+      <App />
+    </ApolloProvider>
+  </StrictMode>,
+  document.getElementById('root')
+);
+```
+
+Now you can move on to creating your components to fetch and set data. Start with creating a `todo-item` directory in the web-app application:
+
+```bash noLineNumbers
+mkdir apps/web-app/src/app/todo-item
+```
+
+Start with making a simple form to create todos:
+
+```tsx:title=apps/web-app/src/app/todo-item/todo-item-form.tsx
+import React, { useState } from 'react';
+import { useCreateOneTodoItemMutation } from '@todo-starter/data-access';
+
+export const TodoItemForm: React.FunctionComponent = () => {
+  const [createTodoItem] = useCreateOneTodoItemMutation();
+
+  const [text, setText] = useState('');
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    createTodoItem({
+      variables: {
+        text: text,
+        done: false,
+      },
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <button type="submit">Create Todo</button>
+    </form>
+  );
+};
+```
+
+You'll notice it's not working right now. That is because of the default proxy setup. It passes all `/api` requests to the api, including the `/api` portion of the url. You don't want that - you want `/api` on your frontend dev server to hit `/` on your api. Modify your `proxy.conf.json` as so to fix this:
+
+```json:title=apps/web-app/proxy.conf.json
+{
+  "/api": {
+    "target": "http://localhost:3333",
+    "secure": false,
+    "pathRewrite": {
+      "^/api": ""
+    }
+  }
+}
+```
