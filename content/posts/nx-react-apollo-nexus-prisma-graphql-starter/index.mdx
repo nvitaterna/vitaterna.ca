@@ -88,7 +88,20 @@ Create a new library with Nx so you can start organizing your project:
 yarn nx generate @nrwl/node:library prisma-client
 ```
 
-This will create a new library in `libs/prisma-client`. Note that you will also have an `api-interfaces` library - you'll remove that later, just ignore it for now.
+This will create a new library in `libs/prisma-client`. Note that you will also have an `api-interfaces` library - try and do this now through the Nx cli:
+
+```bash noLineNumbers
+yarn nx generate remove api-interfaces
+```
+
+You will receive the following error message:
+
+```noLineNumbers
+api-interfaces is still depended on by the following projects:
+web-app
+```
+
+Nx infers dependencies based on imports - while also letting you
 
 Move the `prisma` directory into the `prisma-client` library:
 
@@ -168,7 +181,6 @@ src
 ```
 
 You also need to modify the base tsconfig file to make typescript play nice with imports:
-
 
 ```json:title=tsconfig.base.json {5}
 {
@@ -582,7 +594,7 @@ export const client = new ApolloClient({
 
 > When you initally setup this application using Nx, it created a proxy config for you in your `web-app` directory. It will automatically proxy any requests on `/api` to your api.
 
-Now go ahead and add the `ApolloProvider` component to your main application so you can use the hooks that the previous code generation created for you:
+Now go ahead and add the `ApolloProvider` component to your main application so you can make use of the hooks that the previous code generation created for you:
 
 ```ts:title=apps/web-app/src/main.tsx {1,10,12}
 import { ApolloProvider } from '@apollo/client';
@@ -608,11 +620,76 @@ Now you can move on to creating your components to fetch and set data. Start wit
 mkdir apps/web-app/src/app/todo-item
 ```
 
-Start with making a simple form to create todos:
+You may now create the folowing files - you will end up with a very basic interface that will let you create todo items and mark them as done. The list will only show todo items not marked as done:
+
+```tsx:title=apps/web-app/src/app/todo-item/todo-item-list-item.tsx
+import {
+  TodoItem,
+  useUpdateOneTodoItemMutation,
+} from '@todo-starter/data-access';
+import React, { useState } from 'react';
+
+interface SingleTodoItemProps {
+  todo: TodoItem;
+}
+
+export const TodoItemListItem: React.FunctionComponent<SingleTodoItemProps> = ({
+  todo,
+}) => {
+  const [updateTodoItem] = useUpdateOneTodoItemMutation();
+  const [checked, setChecked] = useState(todo.done);
+
+  const handleClick = () => {
+    setChecked(true);
+    updateTodoItem({
+      variables: {
+        id: todo.id,
+        done: true,
+      },
+    });
+  };
+
+  return (
+    <li>
+      <span style={{ width: '100px', display: 'inline-block' }}>
+        {todo.text}
+      </span>{' '}
+      <button type="button" onClick={handleClick}>
+        Mark Done
+      </button>
+    </li>
+  );
+};
+```
+
+```tsx:title=apps/web-app/src/app/todo-item/todo-item-list.tsx
+import { useTodoItemsQuery } from '@todo-starter/data-access';
+import React from 'react';
+import { TodoItemListItem } from './todo-item-list-item';
+
+export const TodoItemList: React.FunctionComponent = () => {
+  const { data } = useTodoItemsQuery();
+  const todoItems = data?.todoItems;
+  if (!todoItems) {
+    return null;
+  }
+  const todoList = todoItems
+    .filter((todoItem) => !todoItem.done)
+    .map((todoItem) => {
+      return <TodoItemListItem key={todoItem.id} todo={todoItem} />;
+    });
+
+  return <ul>{todoList}</ul>;
+};
+```
 
 ```tsx:title=apps/web-app/src/app/todo-item/todo-item-form.tsx
 import React, { useState } from 'react';
-import { useCreateOneTodoItemMutation } from '@todo-starter/data-access';
+import {
+  TodoItemsDocument,
+  TodoItemsQuery,
+  useCreateOneTodoItemMutation,
+} from '@todo-starter/data-access';
 
 export const TodoItemForm: React.FunctionComponent = () => {
   const [createTodoItem] = useCreateOneTodoItemMutation();
@@ -626,7 +703,26 @@ export const TodoItemForm: React.FunctionComponent = () => {
         text: text,
         done: false,
       },
+      update: (cache, { data }) => {
+        if (!data?.createOneTodoItem) {
+          return;
+        }
+        const result = cache.readQuery<TodoItemsQuery>({
+          query: TodoItemsDocument,
+        });
+        if (!result) {
+          return;
+        }
+        const { todoItems } = result;
+        cache.writeQuery({
+          query: TodoItemsDocument,
+          data: {
+            todoItems: todoItems.concat([data.createOneTodoItem]),
+          },
+        });
+      },
     });
+    setText('');
   };
 
   return (
@@ -642,7 +738,40 @@ export const TodoItemForm: React.FunctionComponent = () => {
 };
 ```
 
-You'll notice it's not working right now. That is because of the default proxy setup. It passes all `/api` requests to the api, including the `/api` portion of the url. You don't want that - you want `/api` on your frontend dev server to hit `/` on your api. Modify your `proxy.conf.json` as so to fix this:
+```tsx:title=apps/web-app/src/app/todo-item/todo-item-container.tsx
+import React from 'react';
+import { TodoItemForm } from './todo-item-form';
+import { TodoItemList } from './todo-item-list';
+
+export const TodoItemContainer: React.FunctionComponent = () => {
+  return (
+    <>
+      <TodoItemForm />
+      <TodoItemList />
+    </>
+  );
+};
+```
+
+Last but not least, import the container in the `app.tsx` file:
+
+```tsx:title=apps/web-app/src/app/app.tsx
+import { TodoItemContainer } from './todo-item/todo-item-container';
+
+export const App = () => {
+  return <TodoItemContainer />;
+};
+
+export default App;
+```
+
+You'll notice that you no longer have any references to the original `api-interfaces` library that was created for you. You may remove it now and Nx will not complain:
+
+```bash noLineNumbers
+yarn nx generate remove api-interfaces
+```
+
+One more thing before you start up your frontend. The default proxy setup passes all `/api` requests to the api, including the `/api` portion of the path. You don't want that - you want `/api` on your frontend dev server to hit `/` on your api. Modify your `proxy.conf.json` as so to fix this:
 
 ```json:title=apps/web-app/proxy.conf.json
 {
@@ -655,3 +784,131 @@ You'll notice it's not working right now. That is because of the default proxy s
   }
 }
 ```
+
+You can stop your api now if it's still running, and spin up both your api and frontend with one command via the Nx cli:
+
+```bash noLineNumbers
+yarn nx run-many --target=serve --all --parallel
+```
+
+You should now be able to see your application running on <Link to="http://localhost:4200">http://localhost:4200</Link>. It's ugly, but you'll notice it's working as advertised.
+
+## Workflow Improvements
+
+Although you have your application setup - there are a lot of improvements that can be made to automate the code generation commands you used earler.
+
+You will begin this section by commiting your current work so far:
+
+```bash noLineNumbers
+git add .
+git commit -m [message]
+```
+
+Say you want to add another field to your TodoItem model. Modify your schema as so:
+
+```prisma:title=libs/prisma-client/prisma/schema.prisma noLineNumbers {4}
+model TodoItem {
+  id          Int     @id @default(autoincrement())
+  text        String
+  description String?
+  done        Boolean
+}
+```
+
+You may make another migration as well to reflect the changes on your database:
+
+```bash noLineNumbers
+yarn prisma migrate dev --name init
+```
+
+The next steps would be to regenerate your prisma client, regenerate your nexus typings, and regenerate your frontend data accessors. Instead of having to manually run each command every time, you can put this into Nx's workflow via the `workspace.json` file.
+
+For each project that has code generation, you will add another target named `generate-gql` (the name is arbitrary). This will utilize the <Link to="https://nx.dev/latest/angular/workspace/run-commands-executor">run commands</Link> tool from Nx:
+
+```json:title=workspace.json noLineNumbers {5-10,15-20,25-30}
+{
+  "projects": {
+    "prisma-client": {
+      "targets": {
+        "generate-gql": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "yarn prisma generate"
+          }
+        }
+      }
+    },
+    "api": {
+      "targets": {
+        "generate-gql": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "yarn ts-node --project ./tsconfig.base.json --compiler-options '{\"module\":\"CommonJS\"}' --transpile-only apps/api/src/graphql/schema"
+          }
+        }
+      }
+    },
+    "data-access": {
+      "targets": {
+        "generate-gql": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "yarn graphql-codegen --config libs/data-access/codegen.yml"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Nx has another option for running commands _only for affected apps/libs_. This requires your dependency tree to be setup correctly - which is usually taken care of by imports. You can take a look at the dependency graph by running the following command:
+
+```bash noLineNumbers
+yarn nx dep-graph
+```
+
+The command will tell you where you can view the dependency graph. Open the link. You'll see that there is a link missing between `data-access` and `api`. This is because there are no actual imports happening - but they should be linked as the `data-access` library depends on the api for code generation. You can fix that in the `nx.json` file:
+
+```json:title=nx.json noLineNumbers {5}
+{
+  "projects": {
+    "data-access": {
+      "tags": [],
+      "implicitDependencies": ["api"]
+    }
+  }
+}
+```
+
+Restart the dependcy graph server and you'll see that everything is linked up properly.
+
+Before you run the generate-gql command for affected projects, add the following option to your `nx.json` file to make sure that the command gets ran in order of project dependencies as each step relies on the last:
+
+```json:title=nx.json noLineNumbers {5}
+{
+  "tasksRunnerOptions": {
+    "default": {
+      "options": {
+        "strictlyOrderedTargets": ["generate-gql"]
+      }
+    }
+  }
+}
+```
+
+Now you can run `generate-gql` for all <Link to="https://nx.dev/latest/angular/cli/affected">affected</Link> projects:
+
+```bash noLineNumbers
+yarn nx affected --target=generate-gql
+```
+
+You'll see this run the `generate-gql` commands you set up above in the correct order based on dependencies.
+
+Now, what if you pulled down the project and everything is up-to-date? The affected command will not run anything - even though you don't have the generated files. You can use the following command to run generate-gql for all projects:
+
+```bash noLineNumbers
+yarn nx run-many --target=generate-gql --all
+```
+
+Once again, you'll see that the tasks ran in the correct order.
