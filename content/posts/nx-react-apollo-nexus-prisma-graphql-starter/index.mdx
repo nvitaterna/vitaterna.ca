@@ -14,9 +14,7 @@ tags:
 
 import Link from "../../../src/components/link";
 
-This walkthrough will guide you in setting up a full stack monorepo. It will not go into the specific technologies that you'll be using as it will be focused on setting up a workflow and having everything play together nicely.
-
-This will follow a similar structure to <Link to="https://blog.nrwl.io/using-apollo-graphql-with-react-in-an-nx-workspace-99db8d69cebe">this article</Link> while making changes to the workflow to play nice with Nexus and Prisma. In this article, you will build a very basic 'Todo' GraphQL API that is consumed by a React frontend. This will all be contained in a Nx workspace in a single directory. This walkthrough will be focused on getting a workflow setup.
+In this article, you will build a simple GraphQL API that manages a single list of todos. You'll create this using Apollo-Express and it will be consumed by a React frontend.
 
 Just as a heads-up - my environment is Ubuntu 20.04.1 in WSL2, and I'll be using node 14.17.0 and yarn 1.22.10. You can use `todo-starter` as the project name - though you can use whatever name you'd like.
 
@@ -63,8 +61,6 @@ After these selections have been made, the Nx CLI will create your workspace. En
 cd todo-starter
 ```
 
-For the rest of the walkthrough, you will consider this as the "root" directory.
-
 ## Prisma
 
 First, you'll add the `prisma` cli. This will only be needed for development, so install it as a development dependency via the `-D` flag. You'll also need the prisma client as a regular dependency:
@@ -80,15 +76,15 @@ Use the `prisma init` command to initialize your prisma schema:
 yarn prisma init
 ```
 
-This will create a new directory called `prisma` in your root which contains a `schema.prisma` file. It will also create a `.env` file in your root directory.
+This will create a new directory called `prisma` in your root which contains a `schema.prisma` file. It will also create a `.env` file in your root directory. This schema file is your single source of truth for your data models. <Link to="https://pris.ly/d/prisma-schema">Prisma's website</Link> goes more in depth on what you can do in this file.
 
-Create a new library with Nx so you can start organizing your project:
+Create a new library with Nx so you can start organizing your workspace:
 
 ```bash noLineNumbers
 yarn nx generate @nrwl/node:library prisma-client
 ```
 
-This will create a new library in `libs/prisma-client`. Note that you will also have an `api-interfaces` library - try and do this now through the Nx cli:
+This will create a new node library in `libs/prisma-client`. Note that you will also have an `api-interfaces` library - try and remove this now through the Nx cli:
 
 ```bash noLineNumbers
 yarn nx generate remove api-interfaces
@@ -101,7 +97,7 @@ api-interfaces is still depended on by the following projects:
 web-app
 ```
 
-Nx infers dependencies based on imports - while also letting you
+Nx finds explicit dependencies in your application through import statements. You may also set implicit dependencies manually, which you will need to do later in this tutorial.
 
 Move the `prisma` directory into the `prisma-client` library:
 
@@ -109,7 +105,7 @@ Move the `prisma` directory into the `prisma-client` library:
 mv prisma libs/prisma-client
 ```
 
-Since you've moved the schema from it's default location, let the prisma client know that by adding this to the end of your `package.json` file:
+Modify your `package.json` file to make the prisma cli aware of this change:
 
 ```json:title=package.json
 {
@@ -122,9 +118,6 @@ Since you've moved the schema from it's default location, let the prisma client 
 Edit the `schema.prisma` as so:
 
 ```prisma:title=libs/prisma-client/prisma/schema.prisma {5,11}
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
@@ -142,21 +135,15 @@ model TodoItem {
 }
 ```
 
-You will use `sqlite` as the datasource to avoid the need to spin up a server. Set the output to a relative directory in the library. By default this gets output to your `node modules` directory. By putting it into this library's source code, it allows Nx to track when changes are made (more on why this matters later on). You are also creating a basic `TodoItem` model using Prisma's schema syntax.
+You will use `sqlite` as the datasource to avoid the need to spin up a server. Set the prisma client generation output to a relative directory in the library. You'll be importing this directly in your api so Nx will recognize this dependency. You are also creating a basic `TodoItem` model using Prisma's schema syntax.
 
 You can also go ahead and modify the `.env` file that was created by prisma, with an sqlite file url. An absolute path is recommended:
 
 ```dotenv:title=.env
-# Environment variables declared in this file are automatically made available to Prisma.
-# See the documentation for more detail: https://pris.ly/d/prisma-schema#using-environment-variables
-
-# Prisma supports the native connection string format for PostgreSQL, MySQL and SQLite.
-# See the documentation for all the connection string options: https://pris.ly/d/connection-strings
-
 DATABASE_URL="file:/tmp/todo-starter/todo.db"
 ```
 
-You can create your your database with the `prisma migrate` command as shown <Link to="https://www.prisma.io/docs/concepts/components/prisma-migrate">here</Link>. This will create your database in the `DATABASE_URL` location you specified above. This command will also create a migrations directory that is used to keep your database in sync with your schema:
+You can create your your database with the `prisma migrate` command as shown <Link to="https://www.prisma.io/docs/concepts/components/prisma-migrate">here</Link>. This command will also create a migrations directory that is used to keep your database in sync with your schema:
 
 ```bash noLineNumbers
 yarn prisma migrate dev --name init
@@ -174,7 +161,7 @@ Run the following command to populate that directory with your generated prisma 
 yarn prisma generate
 ```
 
-You can read more about what prisma generates <Link to="">here</Link>. These generated files do not need to be commited to your repository. Create a `.gitignore` file in the `prisma-client` library:
+You can read more about what prisma generates on <Link to="">it's website</Link>. These generated files do not need to be commited to your repository. Create a `.gitignore` file in the `prisma-client` library:
 
 ```gitignore:title=libs/prisma-client/.gitignore
 src
@@ -211,7 +198,7 @@ You'll also need to add `ts-node` to generate some of the nexus graphql files:
 yarn add -D ts-node
 ```
 
-You'll also need to add the nexus typings to your api:
+You'll also need to add the nexus typings to your api tsconfig:
 
 ```json:title=apps/api/tsconfig.app.json {5}
 {
@@ -223,7 +210,7 @@ You'll also need to add the nexus typings to your api:
 }
 ```
 
-Make a new directory in your api app to keep your graphql code organized:
+Make a new directory in your api project to keep your graphql code organized:
 
 ```bash noLineNumbers
 mkdir apps/api/src/graphql
@@ -271,7 +258,7 @@ export const schema = makeSchema({
 });
 ```
 
-So there is quite a bit going on here. In general - you'd normally be using relative paths for most of this. In most cases you don't have to specify where the prisma client is either. Since we are in a monorepo and everything is run from the root directory you need to use absolute paths. You can read more about the nexus schema options in <Link to="https://nexusjs.org/docs/guides/schema">this guide</Link> from nexusjs.org.
+Yu'd normally be using relative paths for most of this. In most cases you don't have to specify where the prisma client is either. Since we are in a monorepo and everything is run from the root directory you need to use absolute paths. You can read more about the nexus schema options in <Link to="https://nexusjs.org/docs/guides/schema">this guide</Link> from nexusjs.org.
 
 Once again, these generated files do not need to be commited to your repository. Create a `.gitignore` file in the `api` app:
 
@@ -285,7 +272,9 @@ You'll notice the empty types array - you'll be populating that soon. Let's star
 yarn ts-node --project ./tsconfig.base.json --compiler-options '{"module":"CommonJS"}' --transpile-only apps/api/src/graphql/schema
 ```
 
-This will create a couple files in `apps/api/src/generated` that will be used to help you create models, which is what you'll do next. Make a new file in the graphql directory as follows:
+This will create a couple files in `apps/api/src/generated`. A `nexus.ts` file for model creation, and a `schema.graphql` file.
+
+Make a new file in the graphql directory as follows for creating a TodoItem type, queries, and mutations:
 
 ```ts:title=apps/api/src/graphql/todo-item.ts
 import { mutationField, objectType, queryField } from 'nexus';
@@ -300,10 +289,7 @@ export const todoItemTypes = [
     },
   }),
   queryField((t) => {
-    t.crud.todoItems({
-      filtering: true,
-    });
-    t.crud.todoItem();
+    t.crud.todoItems();
   }),
   mutationField((t) => {
     t.crud.createOneTodoItem();
@@ -314,8 +300,8 @@ export const todoItemTypes = [
 
 You'll notice you're getting some errors right now. That is fine. Since there is no `TodoItem` type generated yet, the crud actions don't have knowledge of it. You'll fix that shortly.
 
-> If you're typing along in an editor with intellisense you'll notice that the definition function argument already knows which fields are available. This comes from the files you've generated with nexus and prisma. This also applies to the crud properties:
-> ![Intellisense](./intellisense.png)
+You'll also notice that the definition function argument already knows which fields are available. This comes from the files you've generated with nexus and prisma. This also applies to the crud properties:
+![Intellisense](./intellisense.png)
 
 This will give nexus all it needs to create a graphql schema with the proper types, queries, and mutations. Import this file in your nexus schema file and add it to the types array:
 
@@ -355,9 +341,39 @@ Run the `ts-node` generation again. This will clear the errors in the `todo-item
 yarn ts-node --project ./tsconfig.base.json --compiler-options '{"module":"CommonJS"}' --transpile-only apps/api/src/graphql/schema
 ```
 
+Take a look at the GraphQL schema now:
+
+```graphql:title=apps/api/src/generated/schema.graphql
+type Mutation {
+  createOneTodoItem(data: TodoItemCreateInput!): TodoItem!
+}
+
+type Query {
+  todoItems(after: TodoItemWhereUniqueInput, before: TodoItemWhereUniqueInput, first: Int, last: Int): [TodoItem!]!
+}
+
+type TodoItem {
+  done: Boolean!
+  id: Int!
+  text: String!
+}
+
+input TodoItemCreateInput {
+  description: String
+  done: Boolean!
+  text: String!
+}
+
+input TodoItemWhereUniqueInput {
+  id: Int
+}
+```
+
+You'll see that everything you defined in Nexus is in your schema. You're almost ready to start making queries.
+
 ### Apollo and Express
 
-You still can't query your newly made graphql schema - as it isn't connected to anything yet. Apollo and express will fix that. Start by adding it to your project:
+You still can't query your newly made graphql schema - as it isn't connected to anything yet. Apollo and express will fix that. Start by adding it to your workspace:
 
 ```bash noLineNumbers
 yarn add apollo-server-express
@@ -513,14 +529,6 @@ mkdir libs/data-access/graphql
 Create a new `todo-item.graphql` file in there with the following. This will give you a few queries that the frontend can use to consume your api:
 
 ```graphql:title=libs/data-access/graphql/todo-item.graphql
-query TodoItem($id: Int!) {
-  todoItem(where: { id: $id }) {
-    id
-    text
-    done
-  }
-}
-
 query TodoItems {
   todoItems {
     id
@@ -531,23 +539,6 @@ query TodoItems {
 
 mutation CreateOneTodoItem($text: String!, $done: Boolean = false) {
   createOneTodoItem(data: { text: $text, done: $done }) {
-    id
-    text
-    done
-  }
-}
-
-mutation DeleteOneTodoItem($id: Int!) {
-  deleteOneTodoItem(where: { id: $id }) {
-    id
-  }
-}
-
-mutation UpdateOneTodoItem($id: Int!, $text: String!, $done: Boolean = false) {
-  updateOneTodoItem(
-    data: { text: { set: $text }, done: { set: $done } }
-    where: { id: $id }
-  ) {
     id
     text
     done
