@@ -7,7 +7,7 @@ const shouldAnalyseBundle = process.env.ANALYSE_BUNDLE;
 module.exports = {
   siteMetadata: {
     siteTitle: "Nicolas Vitaterna",
-    siteTitleAlt: `Minimal Blog - Gatsby Theme`,
+    siteTitleAlt: `vitaterna.ca`,
   },
   plugins: [
     {
@@ -15,6 +15,7 @@ module.exports = {
       // See the theme's README for all available options
       options: {
         mdx: false,
+        feed: false,
         navigation: [
           {
             title: `Blog`,
@@ -47,9 +48,9 @@ module.exports = {
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
-        name: `minimal-blog - @lekoarts/gatsby-theme-minimal-blog`,
-        short_name: `minimal-blog`,
-        description: `Typography driven, feature-rich blogging theme with minimal aesthetics. Includes tags/categories support and extensive features for code blocks such as live preview, line numbers, and code highlighting.`,
+        name: `Nicolas Vitaterna`,
+        short_name: `vitaterna-ca`,
+        description: `Progamming blog to share things I've learned.`,
         start_url: `/`,
         background_color: `#fff`,
         theme_color: `#6B46C1`,
