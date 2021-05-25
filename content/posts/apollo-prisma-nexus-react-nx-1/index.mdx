@@ -40,7 +40,7 @@ yarn create nx-workspace nstock --package-manager yarn
 
 You'll be prompted with some questions, answer them as follows:
 
-```
+```bash noLineNumbers {2,5,8,11}
 ? What to create in the new workspace
 > react-express     [a workspace with a full stack application (React + Express)]
 
@@ -113,7 +113,7 @@ Move the `prisma` directory into the `prisma-client` library root and modify you
 
 Edit the `schema.prisma` as so:
 
-```prisma:title=libs/prisma-client/prisma/schema.prisma {5,11}
+```prisma:title=libs/prisma-client/prisma/schema.prisma {2,8,11-15}
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
