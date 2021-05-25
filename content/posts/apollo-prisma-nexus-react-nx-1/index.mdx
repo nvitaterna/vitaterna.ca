@@ -1,5 +1,5 @@
 ---
-title: "Using Apollo, Prisma, and Nexus with React in an Nx Workspace - Part 1"
+title: "Using Apollo, Prisma, and Nexus with React in an Nx Workspace"
 date: 2021-05-25
 description: ""
 tags:
@@ -13,7 +13,9 @@ tags:
 
 import Link from "../../../src/components/link";
 
-In this article, you will build a simple GraphQL API that tracks todo items. You'll create this using Apollo-Express and it will be consumed by a React frontend. This first article will focus on getting a boilerplate setup. <Link to="/using-apollo-prisma-and-nexus-with-react-in-an-nx-workspace-part-2">The next article in this series</Link> will go over how to make improvements to the workflow when you need to make changes to your schema.
+In this article, you will build a simple GraphQL API that tracks todo items. You'll create this using Apollo-Express and it will be consumed by a React frontend. This will focus on getting a boilerplate setup in a monorepo making use of Nx's toolset.
+
+The
 
 ## Libraries and tools
 
@@ -811,10 +813,153 @@ yarn nx run-many --target=serve --all --parallel
 
 You should now be able to see your application running on <Link to="http://localhost:4200">http://localhost:4200</Link>.
 
-Now what if you want to add a field to the TodoItem model? You'd have to modify `schema.prisma`, modify your Nexus schema, and run each of the generation commands again. Nx has a way to make this process smoother. You'll make improvements to this workflow in the <Link to="/using-apollo-prisma-and-nexus-with-react-in-an-nx-workspace-part-2">next article</Link>.
+## Workflow Improvements
 
-The final code for part one can be found in <Link to="https://github.com/nvitaterna/nx-react-graphql-starter/tree/part-one">this repository</Link>. You can clone it from the end of part one as so:
+Say you want to add a `title` field to your TodoItem model. Go ahead and modify your schema to add this field:
+
+```prisma:title=libs/prisma-client/prisma/schema.prisma noLineNumbers {5}
+model TodoItem {
+  id    Int     @id @default(autoincrement())
+  text  String
+  done  Boolean @default(false)
+  title String?
+}
+```
+
+You may make another migration as well to reflect the changes on your database. This will create another migration file:
 
 ```bash noLineNumbers
-git clone git@github.com:nvitaterna/nx-react-graphql-starter.git -b part-one
+yarn prisma migrate dev --name add-title-todo
 ```
+
+The next steps would be to regenerate your prisma client, regenerate your nexus typings, and regenerate your frontend data accessors. Instead of having to manually run each command every time, you can put this into Nx's workflow via the `workspace.json` file.
+
+For each project that has code generation, you will add another target named `generate-gql` (the name is arbitrary). This will utilize the <Link to="https://nx.dev/latest/angular/workspace/run-commands-executor">run commands</Link> tool from Nx. The commands that you are adding here are were manually run earlier:
+
+```json:title=workspace.json noLineNumbers {5-10,15-20,25-30}
+{
+  "projects": {
+    "prisma-client": {
+      "targets": {
+        "generate-gql": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "yarn prisma generate",
+            "outputPath": "libs/prisma-client/src"
+          }
+        }
+      }
+    },
+    "api": {
+      "targets": {
+        "generate-gql": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "yarn ts-node --project ./tsconfig.base.json --compiler-options '{\"module\":\"CommonJS\"}' --transpile-only apps/api/src/graphql/schema",
+            "outputPath": "apps/api/src/generated"
+          }
+        }
+      }
+    },
+    "data-access": {
+      "targets": {
+        "generate-gql": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "command": "yarn graphql-codegen --config libs/data-access/codegen.yml",
+            "outputPath": "libs/data-access/src"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Nx has another option for running commands for <Link to="https://nx.dev/latest/angular/cli/affected">affected</Link> projects. This requires your dependency tree to be setup correctly - which is usually taken care of by imports. You can take a look at the dependency graph by running the following command:
+
+```bash noLineNumbers
+yarn nx dep-graph
+```
+
+The tool will tell you where you can view the dependency graph (<Link to="http://127.0.0.1:4211/">http://127.0.0.1:4211/</Link>). Click the `Select All` button. You'll see that there is a link missing between `data-access` and `api`. This is because there are no actual imports happening - but they should be linked as the `data-access` library depends on the api for code generation.
+
+You can fix that by adding an implicit dependency to the `data-access` project in the `nx.json` file:
+
+```json:title=nx.json noLineNumbers {5}
+{
+  "projects": {
+    "data-access": {
+      "tags": [],
+      "implicitDependencies": ["api"]
+    }
+  }
+}
+```
+
+Restart the dependcy graph and you'll see that everything is linked up properly after refreshing the page and selecting all projects again.
+
+Before you run the generate-gql command for affected projects, add the following option to your `nx.json` file to make sure that the command gets ran in order of project dependencies as each step relies on the last. You can also add the command to the `cacheableOperations` array so repeated runs are near-instant:
+
+```json:title=nx.json noLineNumbers {5,6}
+{
+  "tasksRunnerOptions": {
+    "default": {
+      "options": {
+        "cacheableOperations": ["build", "lint", "test", "e2e", "generate-gql"],
+        "strictlyOrderedTargets": ["generate-gql"]
+      }
+    }
+  }
+}
+```
+
+Now you can run `generate-gql` for all <Link to="https://nx.dev/latest/angular/cli/affected">affected</Link> projects:
+
+```bash noLineNumbers
+yarn nx affected --target=generate-gql
+```
+
+You'll see this run the `generate-gql` commands you set up above in the correct order based on dependencies.
+
+Now, what if you pulled down the project and everything is up-to-date? The affected command will not run anything - even though you don't have the generated files. You can use the following command to run `generate-gql` for any projects that have that target:
+
+```bash noLineNumbers
+yarn nx run-many --target=generate-gql --all
+```
+
+Once again, you'll see that the tasks ran in the correct order. Make a commit via git to save your changes and continue with the next step.
+
+Update your todo item type file file in your `api` project:
+
+```ts:title=apps/api/src/graphql/todo-item.ts {10}
+import { mutationField, objectType, queryField } from 'nexus';
+
+export const todoItemTypes = [
+  objectType({
+    name: 'TodoItem',
+    definition(t) {
+      t.model.id();
+      t.model.text();
+      t.model.done();
+      t.model.title();
+    },
+  }),
+  queryField((t) => {
+    t.crud.todoItems();
+  }),
+  mutationField((t) => {
+    t.crud.createOneTodoItem();
+  }),
+];
+```
+
+Go ahead and run the following. By default Nx calculates affected projects based on differences from the master branch. You can use the `uncommitted` argument to base it of what hasn't been committed instead:
+
+```bash noLineNumbers
+yarn nx affected --target=generate-gql --uncommitted
+```
+
+You can see that this only runs for the `api` and `data-access` projects - as those are the only two things that are affected by this change. This is Nx's <Link to="https://nx.dev/latest/angular/core-concepts/computation-caching">computation caching</Link> in action.
+
+You now have a full stack application that can easily be expanded upon while using Nx to share code across projects and improve workflow.
