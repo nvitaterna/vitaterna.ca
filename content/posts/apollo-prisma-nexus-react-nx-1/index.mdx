@@ -34,13 +34,13 @@ The
 
 Start by creating an Nx workspace:
 
-```bash noLineNumbers
+```bash
 yarn create nx-workspace todo-starter --package-manager yarn
 ```
 
 You'll be prompted with some questions, answer them as follows:
 
-```bash noLineNumbers {2,5,8,11}
+```bash {2,5,8,11}
 ? What to create in the new workspace
 > react-express     [a workspace with a full stack application (React + Express)]
 
@@ -56,7 +56,7 @@ You'll be prompted with some questions, answer them as follows:
 
 After these selections have been made, the Nx CLI will create your workspace. The react-express selection will give you a great boilerplate to build upon. Enter your workspace directory:
 
-```bash noLineNumbers
+```bash
 cd todo-starter
 ```
 
@@ -64,14 +64,14 @@ cd todo-starter
 
 First, you'll add the `prisma` cli. This will only be needed for development, so install it as a development dependency via the `-D` flag. You'll also need the Prisma client as a regular dependency:
 
-```bash noLineNumbers
+```bash
 yarn add prisma -D
 yarn add @prisma/client
 ```
 
 Use the `prisma init` command to get started:
 
-```bash noLineNumbers
+```bash
 yarn prisma init
 ```
 
@@ -81,19 +81,19 @@ Nx has many different plugins that can be used to build applications and librari
 
 Create a new `node` library with Nx so you can start organizing your workspace:
 
-```bash noLineNumbers
+```bash
 yarn nx generate @nrwl/node:library prisma-client
 ```
 
 This will create a new node library in `libs/prisma-client`. Note that you will also have an `api-interfaces` library - try and remove this now through the Nx cli:
 
-```bash noLineNumbers
+```bash
 yarn nx generate remove api-interfaces
 ```
 
 You will receive the following error message:
 
-```noLineNumbers
+```
 api-interfaces is still depended on by the following projects:
 web-app
 api
@@ -143,13 +143,13 @@ As a sidenote - Primsa automatically reads .env files in the workspace root. Nx 
 
 You can create your your database with the <Link to="https://www.prisma.io/docs/concepts/components/prisma-migrate">prisma migrate</Link> command. This command will also create a migrations directory that is used to keep your database in sync with your schema:
 
-```bash noLineNumbers
+```bash
 yarn prisma migrate dev --name init
 ```
 
 Now that your database is set up, you'll continue with setting up the client. Remove the existing src directory in the `prisma-client` library and run the following command to populate a new src directory with your generated Prisma client:
 
-```bash noLineNumbers
+```bash
 yarn prisma generate
 ```
 
@@ -159,7 +159,7 @@ You can read more about what Prisma generates on <Link to="https://www.prisma.io
 src
 ```
 
-```json:title=libs/prisma-client/.eslintrc.json noLineNumbers {4}
+```json:title=libs/prisma-client/.eslintrc.json {4}
 {
   "ignorePatterns": [
     "!**/*",
@@ -187,7 +187,7 @@ You also need to modify the base `tsconfig.json` file to make typescript play ni
 
 The next step is to get your API setup. Start with installing some more packages to get nexus setup:
 
-```bash noLineNumbers
+```bash
 yarn add nexus-plugin-prisma \
   nexus \
   graphql
@@ -195,7 +195,7 @@ yarn add nexus-plugin-prisma \
 
 You'll also need to add `ts-node` to generate some of the Nexus GraphQL files:
 
-```bash noLineNumbers
+```bash
 yarn add -D ts-node
 ```
 
@@ -263,7 +263,7 @@ Once again, these generated files do not need to be committed to your repository
 src/generated
 ```
 
-```json:title=apps/api/.eslintrc.json noLineNumbers {4}
+```json:title=apps/api/.eslintrc.json {4}
 {
   "ignorePatterns": [
     "!**/*",
@@ -274,7 +274,7 @@ src/generated
 
 You'll notice the empty types array - you'll be populating that soon. Let's start by running ts-node to have nexus generate some files for us:
 
-```bash noLineNumbers
+```bash
 yarn ts-node --project ./tsconfig.base.json --compiler-options '{"module":"CommonJS"}' --transpile-only apps/api/src/graphql/schema
 ```
 
@@ -343,7 +343,7 @@ export const schema = makeSchema({
 
 Run the `ts-node` generation again. This will clear the errors in the `todo-item.ts` file as the proper typings will be generated:
 
-```bash noLineNumbers
+```bash
 yarn ts-node --project ./tsconfig.base.json --compiler-options '{"module":"CommonJS"}' --transpile-only apps/api/src/graphql/schema
 ```
 
@@ -380,7 +380,7 @@ You'll see that everything you defined in Nexus is in your schema. You're almost
 
 You still can't query your newly made GraphQL schema - as it isn't connected to anything yet. Apollo-Express will fix that. Start by adding it to your workspace:
 
-```bash noLineNumbers
+```bash
 yarn add apollo-server-express
 ```
 
@@ -429,13 +429,13 @@ server.on('error', console.error);
 
 You may have noticed this no longer imports the `api-interfaces` library. Try and remove it again:
 
-```bash noLineNumbers
+```bash
 yarn nx generate remove api-interfaces
 ```
 
 You will receive the following error message:
 
-```noLineNumbers
+```
 api-interfaces is still depended on by the following projects:
 web-app
 ```
@@ -444,7 +444,7 @@ After removing the imports from the frontend you'll be able to remove the librar
 
 Nx already has plenty of convenience scripts set up for you so go ahead and run the following to start your api:
 
-```bash noLineNumbers
+```bash
 yarn start api
 ```
 
@@ -454,7 +454,7 @@ There is an issue - if you try making a query, you'll get an error from Prisma. 
 
 In `workspace.json`, find the block in the `projects` property for your `api` app. Modify the existing `build` target as so. You'll be adding the Prisma schema as another asset:
 
-```json:title=workspace.json noLineNumbers {9-13}
+```json:title=workspace.json {9-13}
 {
   "projects": {
     "api": {
@@ -483,7 +483,7 @@ Start your api again - and you'll notice it's working now. You can open up the `
 
 Let's start with adding some more packages. You'll be using these to generate typings for your frontend application as seen on <Link to="https://www.graphql-code-generator.com/docs/plugins/typescript-react-apollo">graphql-code-generator.com</Link>:
 
-```bash noLineNumbers
+```bash
 yarn add -D @graphql-codegen/cli \
   @graphql-codegen/typescript-operations \
   @graphql-codegen/typescript-react-apollo
@@ -491,7 +491,7 @@ yarn add -D @graphql-codegen/cli \
 
 You will now create a react library that the frontend will use to consume your api. Do so via the following command:
 
-```bash noLineNumbers
+```bash
 yarn nx generate @nrwl/react:library data-access
 ```
 
@@ -547,13 +547,13 @@ mutation CreateOneTodoItem($text: String!, $done: Boolean = false) {
 
 You'll also install the apollo client now, as the generated file will rely on it:
 
-```bash noLineNumbers
+```bash
 yarn add @apollo/client
 ```
 
 Delete the existing `src` directory and generate files for the frontend:
 
-```bash noLineNumbers
+```bash
 yarn graphql-codegen --config libs/data-access/codegen.yml
 ```
 
@@ -563,14 +563,14 @@ Once again, these files do not need to be committed or linted:
 src
 ```
 
-````json:title=libs/data-access/.eslintrc.json noLineNumbers {4}
+```json:title=libs/data-access/.eslintrc.json {4}
 {
   "ignorePatterns": [
     "!**/*",
     "src"
   ]
 }
-
+```
 The `index.tsx` file is generated based on your `graphql.schema` file and the queries you created above. It gives you everything you need to consume your api on the frontend.
 
 Now is a good time to move on to the frontend as our api and data access are ready.
@@ -579,15 +579,15 @@ Now is a good time to move on to the frontend as our api and data access are rea
 
 Create a new `react` library to house your todos feature:
 
-```bash noLineNumbers
+```bash
 yarn nx generate @nrwl/react:library feature-todos --style=scss
-````
+```
 
 ### Todo Components
 
 You'll also create two components for creating and viewing todo items:
 
-```bash noLineNumbers
+```bash
 yarn nx generate @nrwl/react:component --name=TodoItemList --export --project=feature-todos --style=scss
 yarn nx generate @nrwl/react:component --name=TodoItemForm --export --project=feature-todos --style=scss
 ```
@@ -787,7 +787,7 @@ TodoItemList {
 
 You'll notice that you no longer have any references to the original `api-interfaces` library that was created for you. You may remove it now and Nx will not complain:
 
-```bash noLineNumbers
+```bash
 yarn nx generate remove api-interfaces
 ```
 
@@ -807,7 +807,7 @@ Before you start your frontend - you need to modify the default proxy configurat
 
 You can stop your api now if it's still running, and spin up both your `api` and `web-app`with one command via the Nx cli:
 
-```bash noLineNumbers
+```bash
 yarn nx run-many --target=serve --all --parallel
 ```
 
@@ -817,7 +817,7 @@ You should now be able to see your application running on <Link to="http://local
 
 Say you want to add a `title` field to your TodoItem model. Go ahead and modify your schema to add this field:
 
-```prisma:title=libs/prisma-client/prisma/schema.prisma noLineNumbers {5}
+```prisma:title=libs/prisma-client/prisma/schema.prisma {5}
 model TodoItem {
   id    Int     @id @default(autoincrement())
   text  String
@@ -828,7 +828,7 @@ model TodoItem {
 
 You may make another migration as well to reflect the changes on your database. This will create another migration file:
 
-```bash noLineNumbers
+```bash
 yarn prisma migrate dev --name add-title-todo
 ```
 
@@ -836,7 +836,7 @@ The next steps would be to regenerate your Prisma client, regenerate your nexus 
 
 For each project that has code generation, you will add another target named `generate-gql` (the name is arbitrary). This will utilize the <Link to="https://nx.dev/latest/angular/workspace/run-commands-executor">run commands</Link> tool from Nx. The commands that you are adding here are were manually run earlier:
 
-```json:title=workspace.json noLineNumbers {5-10,16-21,27-32}
+```json:title=workspace.json {5-10,16-21,27-32}
 {
   "projects": {
     "prisma-client": {
@@ -878,7 +878,7 @@ For each project that has code generation, you will add another target named `ge
 
 Nx has another option for running commands for <Link to="https://nx.dev/latest/angular/cli/affected">affected</Link> projects. This requires your dependency tree to be set up correctly - which is usually taken care of by imports. You can take a look at the dependency graph by running the following command:
 
-```bash noLineNumbers
+```bash
 yarn nx dep-graph
 ```
 
@@ -886,7 +886,7 @@ The tool will tell you where you can view the dependency graph (<Link to="http:/
 
 You can fix that by adding an implicit dependency to the `data-access` project in the `nx.json` file:
 
-```json:title=nx.json noLineNumbers {5}
+```json:title=nx.json {5}
 {
   "projects": {
     "data-access": {
@@ -901,7 +901,7 @@ Restart the dependcy graph and you'll see that everything is linked up properly 
 
 Before you run the `generate-gql` command for affected projects, add the following option to your `nx.json` file to make sure that the command gets ran in order of project dependencies as each step relies on the last. You can also add the command to the `cacheableOperations` array so repeated runs are near-instant:
 
-```json:title=nx.json noLineNumbers {5,6}
+```json:title=nx.json {5,6}
 {
   "tasksRunnerOptions": {
     "default": {
@@ -916,7 +916,7 @@ Before you run the `generate-gql` command for affected projects, add the followi
 
 Now you can run `generate-gql` for all <Link to="https://nx.dev/latest/angular/cli/affected">affected</Link> projects:
 
-```bash noLineNumbers
+```bash
 yarn nx affected --target=generate-gql
 ```
 
@@ -948,7 +948,7 @@ export const todoItemTypes = [
 
 Go ahead and run the following. By default, Nx calculates affected projects based on differences from the master branch. You can use the `uncommitted` argument to base it on what hasn't been committed instead:
 
-```bash noLineNumbers
+```bash
 yarn nx affected --target=generate-gql --uncommitted
 ```
 

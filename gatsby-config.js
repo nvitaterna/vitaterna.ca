@@ -16,6 +16,7 @@ module.exports = {
       options: {
         mdx: false,
         feed: false,
+        showLineNumbers: false,
         navigation: [
           {
             title: `Blog`,
