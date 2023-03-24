@@ -1,0 +1,230 @@
+---
+title: 'Setting Up A Blog with Next.js'
+date: 2023-03-03
+description: "In this article, I'll be going over the setup of this blog. Starting with `yarn create next-app`, I'll go over some of the steps and choices made in the process."
+tags:
+  - nextjs
+  - react
+  - mdx
+---
+
+## Preamble
+
+Going into this project I knew that I wanted to create a blog "from scratch". I had used gatsby for the previous version of this blog, but I wanted to try using next.js to get feel for how things should work in the back end. I chose to use mdx because I really like writing the posts "in code" as it allows me to make use of any custom react components I may need.
+
+## Getting Started
+
+As this is a blog and I have some idea of what I want - I went straight to the Next.js docs and found the getting started section. `yarn create next-app`. Done. I then looked up MDX for Next.js and installed that via `yarn add @next/mdx @mdx-js/loader @mdx-js/react`. Easy.
+
+Now, time to start coding, right? Well I started writing this post as soon as I added MDX so I was able to view it in the browser. I initially created this file - `src/pages/blog/blog-setup.mdx`. Well, as soon as I started rendering it I realized I'd want some sort of layout. I'd also need a way to view all posts. A quick google search lead me to a post titled [How to Build Your Own Blog with Next.js and MDX](https://www.freecodecamp.org/news/how-to-build-your-own-blog-with-next-js-and-mdx/). Perfect.
+
+### Getting Articles
+
+Skimming through, I find the most important section that I needed to get started quickly. After installing the required packages (`gray-matter`, `next-mdx-remote`), I made modifications to the `getSlug`, `getArticleFromSlug`, and `getAllArticles` functions. I'll explain my changes below:
+
+1. Implementing [zod](https://github.com/colinhacks/zod). Validation should be used whenever you are handling unstructured data. Sure, I'm writing every post so I _know_ the properties, right? **Wrong**. I can (and will) make mistakes. I'd like to catch this at build time, rather than looking at my blog one day and see that a title is missing. So I'll implement a schema for the frontmatter data in my posts. The other bonus is that I get a typed object rather than something like `Record<string, unknown>`.
+
+2. Adding types. I'm using typescript so I'd like to define some interfaces for my objects I'll be returning. I've set up the two structures I will need. The first is `PostItem{:ts}`. This will be the interface returned as an array when getting a list of posts - only interested in the post metadata and not the content. Second will be a `Post`. This will essentially be a `PostItem` including the article content. I've also added a `loadPost` function since both get methods are loading posts the same way.
+
+```ts showLineNumbers title="src/lib/mdx/article.ts"
+import fs from 'fs/promises';
+import path from 'path';
+
+import matter from 'gray-matter';
+import { infer, z } from 'zod';
+
+const POSTS_DIRECTORY = path.resolve(process.cwd(), 'src/posts');
+
+const postSchema = z.object({
+  title: z.string(),
+  date: z.date(),
+  description: z.string(),
+  tags: z.array(z.string()),
+});
+
+interface PostItem extends infer<typeof postSchema> {
+  slug: string;
+}
+
+interface Post {
+  content: string;
+  frontMatter: PostItem;
+}
+
+const loadPost = async (slug: string) => {
+  const filePath = path.join(POSTS_DIRECTORY, `${slug}.mdx`);
+
+  const source = await fs.readFile(filePath);
+
+  const { content, data } = matter(source);
+
+  const parsedData = postSchema.parse(data);
+
+  return {
+    parsedData,
+    content,
+  };
+};
+
+export const getSlugs = async () => {
+  const slugs = await (
+    await fs.readdir(POSTS_DIRECTORY)
+  ).map((fileName) => {
+    return fileName.replace('.mdx', '');
+  });
+
+  return slugs;
+};
+
+export const getPosts = async () => {
+  const slugs = await getSlugs();
+
+  const posts: PostItem[] = await Promise.all(
+    slugs.map(async (slug) => {
+      const { parsedData } = await loadPost(slug);
+
+      const post: PostItem = {
+        ...parsedData,
+        slug,
+      };
+
+      return post;
+    }),
+  );
+
+  return posts;
+};
+
+export const getPost = async (slug: string) => {
+  const { parsedData, content } = await loadPost(slug);
+
+  const post: Post = {
+    content,
+    frontMatter: {
+      ...parsedData,
+      slug,
+    },
+  };
+
+  return post;
+};
+```
+
+As I was writing this blog, I decided to get syntax highlighting setup properly. A few google searches lead me to [rehype-pretty-code](https://rehype-pretty-code.netlify.app/). The reasony why I chose this is that it makes use of VS Code's syntax highlighting and has built-in support for light/dark mode themes. Including the other rehype plugins, here are the options I have setup so far for `next-mdx-remote`. I put these in a separate file for organization:
+
+```ts title="src/lib/mdx/remote-options.ts" showLineNumbers
+import type { SerializeOptions } from 'next-mdx-remote/dist/types';
+import rehypeAutolinkHeadings, {
+  Options as RehypeAutolinkHeadingsOptions,
+} from 'rehype-autolink-headings';
+import rehypeCodeTitles from 'rehype-code-titles';
+import rehypePrettyCode, {
+  Options as RehypePrettyCodeOptions,
+} from 'rehype-pretty-code';
+import rehypeSlug from 'rehype-slug';
+
+const remoteOptions: SerializeOptions = {
+  mdxOptions: {
+    rehypePlugins: [
+      rehypeSlug,
+      [
+        rehypeAutolinkHeadings,
+        {
+          properties: { className: ['anchor'] },
+          behaviour: 'wrap',
+        } as Partial<RehypeAutolinkHeadingsOptions>,
+      ],
+      rehypeCodeTitles,
+      [
+        rehypePrettyCode,
+        {
+          theme: {
+            dark: 'one-dark-pro',
+            light: 'min-light',
+          },
+          keepBackground: true,
+        } as Partial<RehypePrettyCodeOptions>,
+      ],
+    ],
+  },
+};
+
+export default remoteOptions;
+```
+
+Finally, my blog article page:
+
+```tsx title="src/pages/blog/[slug].tsx" showLineNumbers
+import { ParsedUrlQuery } from 'querystring';
+
+import { GetStaticPaths, GetStaticProps } from 'next';
+import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
+import { serialize } from 'next-mdx-remote/serialize';
+
+import { getPost, getSlugs } from '@/lib/mdx/article';
+import remoteOptions from '@/lib/mdx/remote-options';
+
+interface BlogPostPageProps {
+  post: string;
+  source: MDXRemoteSerializeResult<
+    Record<string, unknown>,
+    Record<string, unknown>
+  >;
+}
+
+const BlogPostPage: React.FC<BlogPostPageProps> = ({ source }) => {
+  return (
+    <div>
+      <MDXRemote {...source} />
+    </div>
+  );
+};
+
+export default BlogPostPage;
+
+interface QParams extends ParsedUrlQuery {
+  slug: string;
+}
+
+export const getStaticPaths: GetStaticPaths<QParams> = async () => {
+  const slugs = await getSlugs();
+  return {
+    paths: slugs.map((slug) => ({
+      params: {
+        slug,
+      },
+    })),
+    fallback: false,
+  };
+};
+
+export const getStaticProps: GetStaticProps<
+  BlogPostPageProps,
+  QParams
+> = async ({ params }) => {
+  const slug = params?.slug;
+  if (!slug) {
+    throw new Error('how');
+  }
+
+  const source = await getPost(slug);
+  const mdxSource = await serialize(source.content, remoteOptions);
+
+  return {
+    props: {
+      post: params?.slug || '',
+      source: mdxSource,
+    },
+  };
+};
+```
+
+After this is setup - here's what my blog looks like so far.
+
+![Time to make it pretty!](blog-setup/blog-setup-1.png)
+
+As you can see - I've got both dark mode and light mode showing for the code blocks as expected. There is no styling otherwise.
+
+## Styling
+
+I've used Material UI in the past but wanted to try something different for the sake of learning. A few Google searches brought up Chakra UI. I've heard of it before but hadn't really looked at the documentation yet. A quick scan of their getting started section showed me that they had instructions for Next.js. It has a wide variety of copmonents and they do a nice job of displaying them all in one page. Let's get started with it.

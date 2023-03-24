@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.prose :where(ul > li p):not(:where(.unprose *)) {
+  margin-top: 2.75em;
+  margin-bottom: 2.75em;
+  color: red;
+}
+
+.prose :where(ul > li > *:first-child):not(:where(.unprose *)) {
+  margin-top: 1.25em;
+  color: blue;
+}
+
+.prose :where(ul > li > *:last-child):not(:where(.unprose *)) {
+  margin-bottom: 1.25em;
+  color: green;
+}
