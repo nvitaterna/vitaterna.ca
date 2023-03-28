@@ -1,7 +1,5 @@
 import Link from 'next/link';
 
-import { Tag } from '@/lib/mdx/tag';
-
 interface TagsListProps {
   tags: string[];
 }

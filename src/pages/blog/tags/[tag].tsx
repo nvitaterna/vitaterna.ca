@@ -21,9 +21,9 @@ const BlogTagPage: NextPageWithLayout<BlogTagPageProps> = ({
     <>
       <h1>{tag.name}</h1>
       <ul>
-        {articles.map((post) => (
-          <li key={post.slug}>
-            <ArticleListItem article={post} />
+        {articles.map((article) => (
+          <li key={article.slug}>
+            <ArticleListItem article={article} />
           </li>
         ))}
       </ul>
