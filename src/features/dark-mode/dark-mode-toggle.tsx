@@ -1,20 +1,19 @@
-import { MoonIcon, SunIcon } from '@heroicons/react/24/solid';
+// import { MoonIcon, SunIcon } from '@heroicons/react/24/solid';
 import { useTheme } from 'next-themes';
-
-import { IconButton } from '@/components/icon-button';
+import { HiSun, HiMoon } from 'react-icons/hi2/index';
 
 export const DarkModeToggle = () => {
   const { theme, setTheme } = useTheme();
 
-  const Icon = theme === 'dark' ? SunIcon : MoonIcon;
+  const Icon = theme === 'dark' ? HiSun : HiMoon;
 
   const onClick = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
   return (
     <div>
-      <IconButton className="h-8 w-8" onClick={onClick}>
-        <Icon />
-      </IconButton>
+      <button onClick={onClick}>
+        <Icon size="1.5em" />
+      </button>
     </div>
   );
 };

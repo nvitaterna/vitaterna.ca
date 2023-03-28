@@ -4,32 +4,32 @@ import path from 'path';
 import matter from 'gray-matter';
 import { infer, z } from 'zod';
 
-const POSTS_DIRECTORY = path.resolve(process.cwd(), 'src/posts');
+const ARTICLES_DIRECTORY = path.resolve(process.cwd(), 'src/articles');
 
-const postSchema = z.object({
+const articleSchema = z.object({
   title: z.string(),
-  date: z.date(),
+  date: z.preprocess((val) => z.date().parse(val).toString(), z.string()),
   description: z.string(),
   tags: z.array(z.string()),
 });
 
-interface PostItem extends infer<typeof postSchema> {
+export interface ArticleItem extends infer<typeof articleSchema> {
   slug: string;
 }
 
-interface Post {
+interface Article {
   content: string;
-  frontMatter: PostItem;
+  frontMatter: ArticleItem;
 }
 
-const loadPost = async (slug: string) => {
-  const filePath = path.join(POSTS_DIRECTORY, `${slug}.mdx`);
+const loadArticle = async (slug: string) => {
+  const filePath = path.join(ARTICLES_DIRECTORY, `${slug}.mdx`);
 
   const source = await fs.readFile(filePath);
 
   const { content, data } = matter(source);
 
-  const parsedData = postSchema.parse(data);
+  const parsedData = articleSchema.parse(data);
 
   return {
     parsedData,
@@ -38,38 +38,36 @@ const loadPost = async (slug: string) => {
 };
 
 export const getSlugs = async () => {
-  const slugs = await (
-    await fs.readdir(POSTS_DIRECTORY)
-  ).map((fileName) => {
+  const slugs = (await fs.readdir(ARTICLES_DIRECTORY)).map((fileName) => {
     return fileName.replace('.mdx', '');
   });
 
   return slugs;
 };
 
-export const getPosts = async () => {
+export const getArticles = async () => {
   const slugs = await getSlugs();
 
-  const posts: PostItem[] = await Promise.all(
+  const articles: ArticleItem[] = await Promise.all(
     slugs.map(async (slug) => {
-      const { parsedData } = await loadPost(slug);
+      const { parsedData } = await loadArticle(slug);
 
-      const post: PostItem = {
+      const article: ArticleItem = {
         ...parsedData,
         slug,
       };
 
-      return post;
+      return article;
     }),
   );
 
-  return posts;
+  return articles;
 };
 
-export const getPost = async (slug: string) => {
-  const { parsedData, content } = await loadPost(slug);
+export const getArticle = async (slug: string) => {
+  const { parsedData, content } = await loadArticle(slug);
 
-  const post: Post = {
+  const article: Article = {
     content,
     frontMatter: {
       ...parsedData,
@@ -77,5 +75,5 @@ export const getPost = async (slug: string) => {
     },
   };
 
-  return post;
+  return article;
 };

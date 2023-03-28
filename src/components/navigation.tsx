@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SiGithub, SiStackoverflow } from 'react-icons/si/index';
 
 import { DarkModeToggle } from '@/features/dark-mode/dark-mode-toggle';
 
@@ -19,8 +20,24 @@ const Navigation = () => {
           <NavLink href="/blog" label="Blog" />
         </div>
         <div className="flex flex-row gap-3">
-          <div>A</div>
-          <div>B</div>
+          <div>
+            <a
+              className="dark:text-slate-400"
+              href="https://github.com/nvitaterna"
+              target="_blank"
+            >
+              <SiGithub />
+            </a>
+          </div>
+          <div>
+            <a
+              className="dark:text-slate-400"
+              href="https://stackoverflow.com/users/2318336/nvitaterna"
+              target="_blank"
+            >
+              <SiStackoverflow />
+            </a>
+          </div>
         </div>
       </div>
     </div>

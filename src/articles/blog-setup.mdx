@@ -26,7 +26,7 @@ Skimming through, I find the most important section that I needed to get started
 
 2. Adding types. I'm using typescript so I'd like to define some interfaces for my objects I'll be returning. I've set up the two structures I will need. The first is `PostItem{:ts}`. This will be the interface returned as an array when getting a list of posts - only interested in the post metadata and not the content. Second will be a `Post`. This will essentially be a `PostItem` including the article content. I've also added a `loadPost` function since both get methods are loading posts the same way.
 
-```ts showLineNumbers title="src/lib/mdx/article.ts"
+```ts
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -112,7 +112,7 @@ export const getPost = async (slug: string) => {
 
 As I was writing this blog, I decided to get syntax highlighting setup properly. A few google searches lead me to [rehype-pretty-code](https://rehype-pretty-code.netlify.app/). The reasony why I chose this is that it makes use of VS Code's syntax highlighting and has built-in support for light/dark mode themes. Including the other rehype plugins, here are the options I have setup so far for `next-mdx-remote`. I put these in a separate file for organization:
 
-```ts title="src/lib/mdx/remote-options.ts" showLineNumbers
+```ts
 import type { SerializeOptions } from 'next-mdx-remote/dist/types';
 import rehypeAutolinkHeadings, {
   Options as RehypeAutolinkHeadingsOptions,
@@ -154,7 +154,7 @@ export default remoteOptions;
 
 Finally, my blog article page:
 
-```tsx title="src/pages/blog/[slug].tsx" showLineNumbers
+```tsx
 import { ParsedUrlQuery } from 'querystring';
 
 import { GetStaticPaths, GetStaticProps } from 'next';

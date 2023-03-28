@@ -19,12 +19,20 @@ module.exports = {
       typography: (theme) => ({
         dark: {
           css: {
-            color: 'white',
+            // color: theme('colors.white'),
+            color: theme('red.500'),
             ...disabledCss,
           },
         },
 
-        DEFAULT: { css: disabledCss },
+        DEFAULT: {
+          css: {
+            ...disabledCss,
+            h1: {
+              'font-weight': 'bold',
+            },
+          },
+        },
         sm: { css: disabledCss },
         lg: { css: disabledCss },
         xl: { css: disabledCss },

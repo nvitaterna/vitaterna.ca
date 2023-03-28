@@ -1,30 +1,25 @@
+import classNames from 'classnames';
 import { useTheme } from 'next-themes';
-import { DetailedHTMLProps, HTMLAttributes } from 'react';
+import { DetailedHTMLProps, HTMLAttributes, useEffect } from 'react';
 
-export const PrettyCodeDiv: React.FC<
-  React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
-> = ({ children, ...props }) => {
-  const { theme } = useTheme();
-
-  if (props['data-theme'] && props['data-theme'] !== theme) {
-    return null;
-  }
+export const PrettyCodeDiv: React.FC<HTMLAttributes<HTMLDivElement>> = ({
+  children,
+  className,
+  ...props
+}) => {
   if (props['data-rehype-pretty-code-fragment'] !== undefined) {
-    return <div {...(props as any)}>{children}</div>;
+    return (
+      <div
+        className={classNames(className, 'bg-gray-100 dark:bg-gray-800 p-4')}
+        {...props}
+      >
+        {children}
+      </div>
+    );
   }
-  if (props['data-rehype-pretty-code-title'] !== undefined) {
-    return <code {...props}>{children}</code>;
-  }
-  return <div {...props}>{children}</div>;
-};
-
-export const PrettyCodeCode: React.FC<
-  DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement>
-> = ({ children, ...props }) => {
-  const { theme } = useTheme();
-
-  if (props['data-theme'] && props['data-theme'] !== theme) {
-    return null;
-  }
-  return <code {...props}>{children}</code>;
+  return (
+    <div {...props} className={className} data-test="true">
+      {children}
+    </div>
+  );
 };
