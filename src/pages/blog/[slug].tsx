@@ -8,6 +8,7 @@ import { serialize } from 'next-mdx-remote/serialize';
 import BaseLayout from '@/components/base-layout';
 import { FormattedDate } from '@/components/formatted-date';
 import { TagsList } from '@/components/tags-list';
+import { Title } from '@/components/title';
 import { useIsClient } from '@/hooks/use-is-client';
 import { getArticle, getSlugs, ArticleItem } from '@/lib/mdx/article';
 import remoteOptions from '@/lib/mdx/remote-options';
@@ -24,16 +25,14 @@ const BlogPostPage: NextPageWithLayout<BlogPostPageProps> = ({
 }) => {
   return (
     <>
-      <Head>
-        {/* title */}
-        <title>{frontMatter.title}</title>
-      </Head>
+      <Title title={frontMatter.title} />
       <header className="mt-32">
         <h1 className="text-5xl mb-1 font-semibold">{frontMatter.title}</h1>
         <FormattedDate date={frontMatter.date} />
         <p className="mt-0">
           <TagsList tags={frontMatter.tags} />
         </p>
+        <hr className="mt-0" />
       </header>
       <MDXRemote {...source} />
     </>

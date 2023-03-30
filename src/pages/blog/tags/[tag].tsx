@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import { ArticleListItem } from '@/components/article-list-item';
 import BaseLayout from '@/components/base-layout';
+import { Title } from '@/components/title';
 import { getArticles, ArticleItem } from '@/lib/mdx/article';
 import { getTag, getTags, Tag } from '@/lib/mdx/tag';
 
@@ -19,7 +20,9 @@ const BlogTagPage: NextPageWithLayout<BlogTagPageProps> = ({
 }) => {
   return (
     <>
+      <Title title={tag.name} />
       <h1>{tag.name}</h1>
+      <hr className="mt-0" />
       <ul>
         {articles.map((article) => (
           <li key={article.slug}>

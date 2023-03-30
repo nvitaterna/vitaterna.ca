@@ -4,6 +4,7 @@ import { NextPageWithLayout, GetStaticProps } from 'next';
 import Link from 'next/link';
 
 import BaseLayout from '@/components/base-layout';
+import { Title } from '@/components/title';
 import { getTags, Tag } from '@/lib/mdx/tag';
 
 interface TagsPageProps {
@@ -12,7 +13,9 @@ interface TagsPageProps {
 const TagsPage: NextPageWithLayout<TagsPageProps> = ({ tags }) => {
   return (
     <>
+      <Title title="Tags" />
       <h1>Tags</h1>
+      <hr className="mt-0" />
       <ul>
         {tags.map((tag) => (
           <li key={tag.name}>

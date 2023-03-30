@@ -4,7 +4,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import { infer, z } from 'zod';
 
-const ARTICLES_DIRECTORY = path.resolve(process.cwd(), 'src/articles');
+const ARTICLES_DIRECTORY = path.resolve(process.cwd(), 'content');
 
 const articleSchema = z.object({
   title: z.string(),

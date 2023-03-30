@@ -2,6 +2,7 @@ import { GetStaticProps, NextPageWithLayout } from 'next';
 
 import { ArticleListItem } from '@/components/article-list-item';
 import BaseLayout from '@/components/base-layout';
+import { Title } from '@/components/title';
 import { ArticleItem, getArticles } from '@/lib/mdx/article';
 
 interface BlogPageProps {
@@ -10,16 +11,20 @@ interface BlogPageProps {
 
 const BlogPage: NextPageWithLayout<BlogPageProps> = ({ articles }) => {
   return (
-    <div>
-      <h1>Blog</h1>
-      <ul>
-        {articles.map((article) => (
-          <li key={article.slug}>
-            <ArticleListItem article={article} />
-          </li>
-        ))}
-      </ul>
-    </div>
+    <>
+      <Title title="Blog" />
+      <div>
+        <h1>Blog</h1>
+        <hr className="mt-0" />
+        <ul>
+          {articles.map((article) => (
+            <li key={article.slug}>
+              <ArticleListItem article={article} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
   );
 };
 
