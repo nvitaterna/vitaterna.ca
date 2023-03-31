@@ -22,13 +22,14 @@ const Home: NextPageWithLayout<HomePageProps> = ({ articles }) => {
       </Head>
       <div>
         <div>
-          <h2>Hi.</h2>
-          <p>
-            I&apos;m Nicolas - currently working as a full-stack developer. I
-            make use of technologies such as NodeJS, React, Vue, and MySQL,
-            among others, to build full stack applications. I created this blog
-            to share some of the things I&apos;ve learned along the way.
-          </p>
+          <h2 className="text-7xl mb-2">
+            Hello,
+            <br />
+            I&apos;m Nicolas,
+            <br />
+            software developer.
+          </h2>
+          <p className="text-xl">Focusing on Node.js and React.</p>
         </div>
         <h2>
           <Link href="/blog" className="no-underline hover:underline">
