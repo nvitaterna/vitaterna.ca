@@ -4,8 +4,9 @@ import { AppProps } from 'next/app';
 import { ThemeProvider } from 'next-themes';
 import { Provider } from 'react-redux';
 
-import components from '@/lib/mdx/components';
 import { setupStore } from '@/store/store';
+
+import components from '../features/mdx/components';
 
 import '../globals.css';
 

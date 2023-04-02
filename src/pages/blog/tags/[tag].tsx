@@ -6,8 +6,11 @@ import Link from 'next/link';
 import { ArticleListItem } from '@/components/article-list-item';
 import BaseLayout from '@/components/base-layout';
 import { Title } from '@/components/title';
-import { getArticles, ArticleItem } from '@/lib/mdx/article';
-import { getTag, getTags, Tag } from '@/lib/mdx/tag';
+
+import { ArticleItem } from '../../../features/article/article.schema';
+import { articleService } from '../../../features/article/article.service';
+import { Tag } from '../../../features/tag/tag.schema';
+import { tagService } from '../../../features/tag/tag.service';
 
 interface BlogTagPageProps {
   tag: Tag;
@@ -43,7 +46,7 @@ interface QParams extends ParsedUrlQuery {
 }
 
 export const getStaticPaths: GetStaticPaths<QParams> = async () => {
-  const tags = await getTags();
+  const tags = await tagService.getTags();
 
   return {
     paths: tags.map((tag) => ({
@@ -63,13 +66,13 @@ export const getStaticProps: GetStaticProps<
   if (!tagName) {
     throw new Error('how tags?');
   }
-  const tag = await getTag(tagName);
+  const tag = await tagService.getTag(tagName);
 
   if (!tag) {
     throw new Error('tag not found');
   }
 
-  const articles = await getArticles();
+  const articles = await articleService.getArticlesByTag(tag.name);
 
   return {
     props: {

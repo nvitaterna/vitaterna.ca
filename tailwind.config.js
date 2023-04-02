@@ -13,7 +13,7 @@ const disabledCss = {
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: 'class',
-  content: ['./src/**/*.{js,ts,jsx,tsx}'],
+  content: ['./src/**/*.{js,ts,jsx,tsx}', './articles/*.mdx'],
   theme: {
     extend: {
       typography: (theme) => ({

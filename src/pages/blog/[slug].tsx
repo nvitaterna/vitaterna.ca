@@ -1,7 +1,6 @@
 import { ParsedUrlQuery } from 'querystring';
 
 import { GetStaticPaths, GetStaticProps, NextPageWithLayout } from 'next';
-import Head from 'next/head';
 import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
 import { serialize } from 'next-mdx-remote/serialize';
 
@@ -9,19 +8,21 @@ import BaseLayout from '@/components/base-layout';
 import { FormattedDate } from '@/components/formatted-date';
 import { TagsList } from '@/components/tags-list';
 import { Title } from '@/components/title';
-import { useIsClient } from '@/hooks/use-is-client';
-import { getArticle, getSlugs, ArticleItem } from '@/lib/mdx/article';
-import remoteOptions from '@/lib/mdx/remote-options';
+
+import { ArticleItem } from '../../features/article/article.schema';
+import { articleService } from '../../features/article/article.service';
+import remoteOptions from '../../features/mdx/remote-options';
+import { slugService } from '../../features/slug/slug.service';
 
 interface BlogPostPageProps {
   post: string;
   source: MDXRemoteSerializeResult<never, never>;
-  frontMatter: ArticleItem;
+  articleData: ArticleItem;
 }
 
 const BlogPostPage: NextPageWithLayout<BlogPostPageProps> = ({
   source,
-  frontMatter,
+  articleData: frontMatter,
 }) => {
   return (
     <>
@@ -50,7 +51,8 @@ interface QParams extends ParsedUrlQuery {
 }
 
 export const getStaticPaths: GetStaticPaths<QParams> = async () => {
-  const slugs = await getSlugs();
+  const slugs = await slugService.getSlugs();
+
   return {
     paths: slugs.map((slug) => ({
       params: {
@@ -70,17 +72,24 @@ export const getStaticProps: GetStaticProps<
     throw new Error('how');
   }
 
-  const source = await getArticle(slug);
+  const article = await articleService.getArticle(slug);
+
+  if (!article) {
+    throw new Error();
+  }
+
   const mdxSource = await serialize<never, never>(
-    source.content,
+    article.content,
     remoteOptions,
   );
+
+  const { content, ...articleData } = article;
 
   return {
     props: {
       post: params?.slug || '',
       source: mdxSource,
-      frontMatter: source.frontMatter,
+      articleData,
     },
   };
 };

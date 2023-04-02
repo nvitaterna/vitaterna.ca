@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { SiGithub, SiStackoverflow } from 'react-icons/si/index';
 
-import { DarkModeToggle } from '@/features/dark-mode/dark-mode-toggle';
+import { DarkModeToggle } from '../features/dark-mode/dark-mode-toggle';
 
 import { NavLink } from './nav-link';
 

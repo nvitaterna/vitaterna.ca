@@ -3,7 +3,9 @@ import { GetStaticProps, NextPageWithLayout } from 'next';
 import { ArticleListItem } from '@/components/article-list-item';
 import BaseLayout from '@/components/base-layout';
 import { Title } from '@/components/title';
-import { ArticleItem, getArticles } from '@/lib/mdx/article';
+
+import { ArticleItem } from '../../features/article/article.schema';
+import { articleService } from '../../features/article/article.service';
 
 interface BlogPageProps {
   articles: ArticleItem[];
@@ -33,7 +35,7 @@ BlogPage.getLayout = (component) => {
 };
 
 export const getStaticProps: GetStaticProps<BlogPageProps> = async () => {
-  const articles = await getArticles();
+  const articles = await articleService.getArticles();
 
   return {
     props: {

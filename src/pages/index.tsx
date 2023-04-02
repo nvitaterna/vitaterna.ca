@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { ArticleListItem } from '@/components/article-list-item';
 import BaseLayout from '@/components/base-layout';
 import { Title } from '@/components/title';
-import { ArticleItem, getArticles } from '@/lib/mdx/article';
+import { ArticleItem } from '@/features/article/article.schema';
+import { articleService } from '@/features/article/article.service';
 
 interface HomePageProps {
   articles: ArticleItem[];
@@ -22,7 +23,7 @@ const Home: NextPageWithLayout<HomePageProps> = ({ articles }) => {
       </Head>
       <div>
         <div>
-          <h2 className="text-7xl mb-2">
+          <h2 className="text-5xl mb-2">
             Hello,
             <br />
             I&apos;m Nicolas,
@@ -54,7 +55,7 @@ Home.getLayout = (component) => {
 };
 
 export const getStaticProps: GetStaticProps<HomePageProps> = async () => {
-  const articles = await getArticles();
+  const articles = await articleService.getArticles();
 
   return {
     props: {
