@@ -94,7 +94,15 @@ export class ArticleRepository {
               slug: fileName.substring(0, fileName.lastIndexOf('.')),
             };
           }),
-        );
+        ).then((articles) => {
+          const currentDate = new Date().getTime();
+
+          // Filter out articles that are not published yet
+          return articles.filter((article) => {
+            const articleDate = new Date(article.date).getTime();
+            return articleDate <= currentDate;
+          });
+        });
       } catch (e) {
         reject(e);
       }

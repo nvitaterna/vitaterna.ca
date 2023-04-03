@@ -8,7 +8,13 @@ export const FormattedDate: React.FC<FormattedDateProps> = ({ date }) => {
   const dateObject = new Date(date);
   const isClient = useIsClient();
 
-  let m = '' + dateObject.getMonth() + 1;
+  if (!isClient) {
+    return (
+      <span className="inline-block h-4 bg-gray-200 rounded-full dark:bg-gray-700 w-20" />
+    );
+  }
+
+  let m = '' + (dateObject.getMonth() + 1);
   let d = '' + dateObject.getDate();
   const y = '' + dateObject.getFullYear();
 
@@ -22,11 +28,5 @@ export const FormattedDate: React.FC<FormattedDateProps> = ({ date }) => {
 
   const formattedDate = `${y}-${m}-${d}`;
 
-  if (isClient) {
-    return <time>{formattedDate}</time>;
-  } else {
-    return (
-      <span className="block h-6 bg-gray-200 rounded-full dark:bg-gray-700 w-24 mb-4" />
-    );
-  }
+  return <time className="w-20">{formattedDate}</time>;
 };
