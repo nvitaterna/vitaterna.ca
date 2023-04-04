@@ -74,10 +74,6 @@ export class ArticleRepository {
       try {
         const fileNames = await fs.readdir(ARTICLES_DIRECTORY);
 
-        this.slugs = fileNames.map((fileName) => {
-          return fileName.substring(0, fileName.lastIndexOf('.'));
-        });
-
         this.articles = await Promise.all(
           fileNames.map(async (fileName) => {
             const filePath = path.join(ARTICLES_DIRECTORY, fileName);
@@ -103,6 +99,8 @@ export class ArticleRepository {
             return articleDate <= currentDate;
           });
         });
+
+        this.slugs = this.articles.map((article) => article.slug);
       } catch (e) {
         reject(e);
       }

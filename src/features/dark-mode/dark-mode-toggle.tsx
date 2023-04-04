@@ -1,3 +1,5 @@
+'use client';
+
 // import { MoonIcon, SunIcon } from '@heroicons/react/24/solid';
 import { useTheme } from 'next-themes';
 import { HiSun, HiMoon } from 'react-icons/hi2/index';
@@ -5,7 +7,7 @@ import { HiSun, HiMoon } from 'react-icons/hi2/index';
 import { useIsClient } from '@/hooks/use-is-client';
 
 export const DarkModeToggle = () => {
-  const { theme, setTheme } = useTheme();
+  const { setTheme, resolvedTheme: theme } = useTheme();
 
   const isClient = useIsClient();
 

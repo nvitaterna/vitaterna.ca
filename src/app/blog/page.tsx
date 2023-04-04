@@ -1,7 +1,7 @@
 import { GetStaticProps, NextPageWithLayout } from 'next';
+import { FC } from 'react';
 
 import { ArticleListItem } from '@/components/article-list-item';
-import BaseLayout from '@/components/base-layout';
 import { Title } from '@/components/title';
 
 import { ArticleItem } from '../../features/article/article.schema';
@@ -11,10 +11,11 @@ interface BlogPageProps {
   articles: ArticleItem[];
 }
 
-const BlogPage: NextPageWithLayout<BlogPageProps> = ({ articles }) => {
+const BlogPage = async () => {
+  const articles = await articleService.getArticles();
+
   return (
     <>
-      <Title title="Blog" />
       <div>
         <h1>Blog</h1>
         <hr className="mt-0" />
@@ -30,18 +31,8 @@ const BlogPage: NextPageWithLayout<BlogPageProps> = ({ articles }) => {
   );
 };
 
-BlogPage.getLayout = (component) => {
-  return <BaseLayout>{component}</BaseLayout>;
-};
-
-export const getStaticProps: GetStaticProps<BlogPageProps> = async () => {
-  const articles = await articleService.getArticles();
-
-  return {
-    props: {
-      articles,
-    },
-  };
+export const metadata = {
+  title: 'Blog',
 };
 
 export default BlogPage;

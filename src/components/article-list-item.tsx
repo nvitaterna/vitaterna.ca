@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { ArticleItem } from '@/lib/mdx/article';
+import { ArticleItem } from '@/features/article/article.schema';
 
 import { FormattedDate } from './formatted-date';
 import { TagsList } from './tags-list';

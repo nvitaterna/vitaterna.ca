@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react';
 
-import Navigation from './navigation';
+import Navigation from '../app/navigation';
 
 const BaseLayout: React.FC<PropsWithChildren> = ({ children }) => {
   return (

@@ -1,4 +1,4 @@
-import { GetStaticProps, NextPageWithLayout } from 'next';
+import { GetStaticProps, NextPage, NextPageWithLayout } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
 
@@ -12,7 +12,8 @@ interface HomePageProps {
   articles: ArticleItem[];
 }
 
-const Home: NextPageWithLayout<HomePageProps> = ({ articles }) => {
+const Home = async () => {
+  const articles = await articleService.getArticles();
   return (
     <>
       <Title />
@@ -22,16 +23,6 @@ const Home: NextPageWithLayout<HomePageProps> = ({ articles }) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div>
-        <div>
-          <h2 className="text-5xl mb-2">
-            Hello,
-            <br />
-            I&apos;m Nicolas,
-            <br />
-            software developer.
-          </h2>
-          <p className="text-xl">Focusing on Node.js and React.</p>
-        </div>
         <h2>
           <Link href="/blog" className="no-underline hover:underline">
             Blog
@@ -50,18 +41,8 @@ const Home: NextPageWithLayout<HomePageProps> = ({ articles }) => {
   );
 };
 
-Home.getLayout = (component) => {
-  return <BaseLayout>{component}</BaseLayout>;
-};
-
-export const getStaticProps: GetStaticProps<HomePageProps> = async () => {
-  const articles = await articleService.getArticles();
-
-  return {
-    props: {
-      articles,
-    },
-  };
+export const metadata = {
+  title: 'Home | vitaterna.ca',
 };
 
 export default Home;
