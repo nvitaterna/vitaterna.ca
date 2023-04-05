@@ -16,9 +16,7 @@ const Home = async () => {
       <div>
         <h1>Home</h1>
         <h2>
-          <Link href="/blog" className="no-underline hover:underline">
-            Blog
-          </Link>
+          <Link href="/blog">Blog</Link>
         </h2>
         <hr />
         <ul>

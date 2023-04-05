@@ -9,10 +9,7 @@ export const TagsList: React.FC<TagsListProps> = ({ tags }) => {
     <>
       {tags.map((tag, i) => (
         <span key={tag}>
-          <Link
-            className="no-underline font-normal hover:underline"
-            href={`/blog/tags/${tag}`}
-          >
+          <Link className="font-normal" href={`/blog/tags/${tag}`}>
             {tag}
           </Link>
           {i < tags.length - 1 && <span>, </span>}
