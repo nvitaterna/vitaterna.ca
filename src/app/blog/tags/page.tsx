@@ -8,7 +8,7 @@ const TagsPage = async () => {
   return (
     <>
       <h1>Tags</h1>
-      <hr className="mt-0" />
+      <hr />
       <ul>
         {tags.map((tag) => (
           <li key={tag.name}>
