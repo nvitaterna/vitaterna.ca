@@ -28,8 +28,9 @@ const BlogPostPage = async ({ params: { slug } }: BlogPostPageProps) => {
     <>
       <header>
         <h1>{article.title}</h1>
-        <FormattedDate date={article.date} />
         <p>
+          <FormattedDate date={article.date} />
+          &nbsp;-&nbsp;
           <TagsList tags={article.tags} />
         </p>
         <hr />

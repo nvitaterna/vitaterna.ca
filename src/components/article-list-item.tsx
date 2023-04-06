@@ -16,7 +16,9 @@ export const ArticleListItem: React.FC<ArticleListItemProps> = ({
     <div>
       <Link href={`/blog/${article.slug}`}>{article.title}</Link>
       <br />
-      <FormattedDate date={article.date} /> - <TagsList tags={article.tags} />
+      <FormattedDate date={article.date} />
+      &nbsp;-&nbsp;
+      <TagsList tags={article.tags} />
     </div>
   );
 };

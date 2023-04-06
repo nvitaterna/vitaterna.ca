@@ -14,12 +14,13 @@ const Home = async () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div>
-        <h1>Hi.</h1>
+        <h1>Hello.</h1>
         <p>
-          I'm Nicolas - currently working as a full-stack developer. Software
-          development is my passion. I also have a modest home lab where I host
-          multiple services that I use daily. I created this blog to share some
-          of the things I've learned.
+          I&apos;m Nicolas, and I am currently working as a full-stack
+          developer. Software development is my passion, and I always seek new
+          challenges. I also have an interest in self-hosting. I run a modest
+          home lab where I host multiple services that I use daily. I created
+          this blog to share some of the things I&apos;ve learned.
         </p>
         <h2>
           <Link href="/blog">Blog</Link>

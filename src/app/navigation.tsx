@@ -1,15 +1,15 @@
 import Link from 'next/link';
 import { SiGithub, SiStackoverflow } from 'react-icons/si/index';
 
+import { DarkModeToggle } from '@/components/dark-mode-toggle';
 import { NavLink } from '@/components/nav-link';
-import { DarkModeToggle } from '@/features/dark-mode/dark-mode-toggle';
 
 const Navigation = () => {
   return (
     <div className="border-b-1 pb-2 px-0 mb-12">
       <div className="flex flex-row justify-between">
         <div className="prose-2xl font-medium">Nicolas Vitaterna</div>
-        <div>
+        <div className="flex flex-row justify-between">
           <DarkModeToggle />
         </div>
       </div>

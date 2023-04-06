@@ -7,7 +7,7 @@ import '../globals.css';
 
 const RootLayout: React.FC<PropsWithChildren> = ({ children }) => {
   return (
-    <html>
+    <html suppressHydrationWarning>
       <body
         className="light:bg-white dark:bg-gray-900"
         suppressHydrationWarning
