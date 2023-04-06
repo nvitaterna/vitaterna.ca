@@ -1,0 +1,27 @@
+---
+title: Creating a Blog with Next.js and MDX
+date: 2023-06-03
+description: In this guide, I'll be going over how to create a blog with Next.js and MDX. I'll be leaving out styling as that's not the focus of this guide.
+tags:
+  - nextjs
+  - mdx
+  - react
+---
+
+## Introduction
+
+The previous iteration of this blog was built with Gatsby. While it was a great all-in-one solution, I wanted to try something a little more lightweight. I've been using Next.js at my current job and I've been really enjoying it. While I've tried smaller projects here and there in the past, I've never really gotten into it. I decided to give it a shot and see how it goes.
+
+## Getting Started
+
+First, we'll need to create a new Next.js app. We can do this by running the following command:
+
+```bash
+yarn create next-app
+```
+
+Next, we'll go ahead and add mdx and gray-matter to our project. We'll need these to parse our markdown files and extract the frontmatter data. We will also be adding mdx-remote which will allow us to render our mdx files on the client side.
+
+```bash
+yarn add mdx gray-matter mdx-remote
+```
