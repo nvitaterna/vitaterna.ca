@@ -1,3 +1,5 @@
+import { Metadata } from 'next';
+
 import { ArticleListItem } from '@/components/article-list-item';
 import { articleService } from '@/features/article/article.service';
 import { tagService } from '@/features/tag/tag.service';
@@ -34,9 +36,12 @@ export const generateStaticParams = async () => {
   return tags.map((tag) => ({ tag: tag.name }));
 };
 
-export const generateMetadata = async ({ params }: BlogTagPageProps) => {
+export const generateMetadata = async ({
+  params,
+}: BlogTagPageProps): Promise<Metadata> => {
   return {
     title: params.tag,
+    description: `Articles with the tag ${params.tag}.`,
   };
 };
 

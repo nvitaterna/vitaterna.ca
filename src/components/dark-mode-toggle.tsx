@@ -19,7 +19,10 @@ export const DarkModeToggle = () => {
 
   return (
     <div>
-      <button onClick={onClick}>
+      <button
+        onClick={onClick}
+        aria-label={`Enable ${theme === 'dark' ? 'light' : 'dark'} mode.`}
+      >
         <Icon size="1.5em" />
       </button>
     </div>

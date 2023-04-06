@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 
 import { FormattedDate } from '@/components/formatted-date';
@@ -53,7 +54,9 @@ export const generateStaticParams = async () => {
   return slugs.map((slug) => ({ slug }));
 };
 
-export const generateMetadata = async ({ params }: BlogPostPageProps) => {
+export const generateMetadata = async ({
+  params,
+}: BlogPostPageProps): Promise<Metadata> => {
   const { slug } = params;
 
   const article = await articleService.getArticle(slug);
@@ -66,6 +69,7 @@ export const generateMetadata = async ({ params }: BlogPostPageProps) => {
 
   return {
     title: article.title,
+    description: article.description,
   };
 };
 
