@@ -1,8 +1,10 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Getting Started
+## Development
 
-First, run the development server:
+A dev container configuration is available, and is setup with the correct version of node and yarn.
+
+After starting the container, run the development server:
 
 ```bash
 yarn dev
