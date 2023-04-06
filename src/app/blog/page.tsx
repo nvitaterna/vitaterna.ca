@@ -24,6 +24,7 @@ const BlogPage = async () => {
 
 export const metadata = {
   title: 'Blog',
+  description: 'Blog page with article list.',
 };
 
 export default BlogPage;

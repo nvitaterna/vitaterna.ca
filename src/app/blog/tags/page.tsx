@@ -24,6 +24,7 @@ const TagsPage = async () => {
 
 export const metadata = {
   title: 'Tags',
+  description: 'List of tags for this blog.',
 };
 
 export default TagsPage;

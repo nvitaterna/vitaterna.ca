@@ -40,6 +40,7 @@ const Home = async () => {
 
 export const metadata = {
   title: 'Home | vitaterna.ca',
+  description: 'vitaterna.ca home page',
 };
 
 export default Home;
