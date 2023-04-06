@@ -20,7 +20,11 @@ const Navigation = () => {
         </div>
         <div className="flex flex-row gap-3">
           <div>
-            <a href="https://github.com/nvitaterna" target="_blank">
+            <a
+              href="https://github.com/nvitaterna"
+              target="_blank"
+              aria-label="Link to my Github"
+            >
               <SiGithub />
             </a>
           </div>
@@ -28,6 +32,7 @@ const Navigation = () => {
             <a
               href="https://stackoverflow.com/users/2318336/nvitaterna"
               target="_blank"
+              aria-label="Link to my Stackoverflow"
             >
               <SiStackoverflow />
             </a>
