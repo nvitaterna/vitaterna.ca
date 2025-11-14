@@ -1,0 +1,129 @@
+---
+pubDatetime: 2025-11-13
+modDateTime: 2025-11-13
+author: Nicolas Vitaterna
+title: Setting up Dokploy on Unraid
+slug: dokploy-on-unraid
+featured: true
+draft: false
+tags:
+  - unraid
+  - dokploy
+description: In this article, I describe how to set up a Dokploy VM in Unraid, step by step.
+---
+
+## Introduction
+
+I am working on some personal projects that I'd like to deploy and had been searching for free node.js hosting. I had looked at some sites like render - and while they offer free hosting, they spin down your server after 15 minutes of inactivity, and then require nearly a minute to spin back up. Unfortunately that is not great for my use case.
+
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+  - [Unraid server](#unraid-server)
+  - [Ubuntu Server ISO](#ubuntu-server-iso)
+- [Creating the VM](#creating-the-vm)
+
+## Prerequisites
+
+### Unraid server
+
+Any hypervisor should work, but this guide is specifically for Unraid.
+
+### Ubuntu Server ISO
+
+This can be downloaded from the [Ubuntu website](https://ubuntu.com/download/server). I recommend using the latest LTS version. This should be uploaded to your Unraid "isos" share.
+
+### Dokploy System Requirements
+
+Dokploy's [documentation](https://docs.dokploy.com/docs/core/installation#requirements) states the following minimum requirements (at time of writing):
+
+- Memory (RAM): 2 GB
+- Storage: 30 GB of free space
+
+## Creating the VM
+
+### VM Configuration
+
+1. Open your Unraid web UI and navigate to the "VMs" tab.
+2. Click on "Add VM" and select "Ubuntu" from the template options.
+3. Configure the VM settings (adjust CPU/RAM/Storage as needed):
+   - Autostart: Yes
+   - Name: Dokploy (or any name you prefer)
+   - vCPUs 2 (adjust as needed)
+   - Initial/Max Memory: 2.0 GB (adjust as needed)
+   - OS Install ISO: Select the Ubuntu Server ISO you uploaded earlier
+   - Primary vDisk Size: 30G (or larger if you plan to host more apps)
+     Defaults for the rest should be fine.
+4. Click "Create" to create the VM.
+
+This should create and start your VM with the console open.
+
+### Installing Ubuntu
+
+You may accept defaults for most of the installation steps. Some pointers:
+
+- Keep track of the IP address assigned to the VM, as you will need it later.
+- Create a user account and password that you will remember.
+- When prompted to install OpenSSH server, select "Yes" so you can SSH into the VM later.
+  - You can skip installing any additional services.
+
+After installation is complete, shut down the VM via Unraid (you may have to force shutdown), and remove the OS install ISO from the VM settings.
+
+## Installing Dokploy
+
+Start up the VM via Unraid again, and SSH into it using the IP address you noted earlier. I'll be following the [Dokploy installation guide](https://docs.dokploy.com/docs/core/installation) for this part.
+
+We'll be going with the Quick Intsallation method, so run the following command in your SSH session:
+
+```bash
+curl -sSL https://dokploy.com/install.sh | sudo sh
+```
+
+You will be prompted for your password to proceed with the install. You'll then see a ton of output as Dokploy and its dependencies are installed. This may take a while depending on your internet connection and server speed. After installation is complete, you should see a message with an IP.
+
+When I ran this, the IP address given was my _public_ IP, and since I was installing this on a local VM, that IP would not work. Instead, use the private IP address assigned to your VM noted earlier.
+
+### Accessing Dokploy
+
+Go to the IP noted above and enter your information and credentials that will be used for authenticating with Dokploy. After logging in, you'll be greeted with the dashboard.
+
+## Deploying a sample app
+
+Click Projcets on the left, and click "Create Project". Give it a name and click create. Now let's create a service. Click "Create Service", and click "Application". Give it a name and click Create.
+
+We now need to add a provider. Let's use a public repo as setting up a Git provider is not within the scope of this guide. I've set up a basic next.js starter repo that we can use.
+
+Scroll to "Git" in the provider sectoin and enter the following repo URL:
+
+`https://github.com/nvitaterna/nextjs-sample.git`
+
+Enter "main" for the branch, and click "Save".
+
+From here we are able to deploy the app. Click "Deploy" at the top of the Deploy Settings section.
+
+You'll see that the deployment fails. This is because the default node versoin for these deployments is 18, but this repo requires 22. To fix this, we can go to the Environment tab and add the following:
+
+```
+NIXPACKS_NODE_VERSION=22
+```
+
+Click Save and go back to the General tab and start another deployment. This time it should succeed!
+
+### Accessing your app
+
+Unfortunately, there is no way to access this application right now. A domain name needs to be added to the project for it to be accessible.
+
+You will need some sort of DNS set up to route traffic to your Dokploy server. For now, we can just use a hosts file entry to test this out.
+
+1. Edit your local machine's hosts file (e.g., `/etc/hosts` on Linux/Mac or `C:\Windows\System32\drivers\etc\hosts` on Windows) and add the following line, replacing `<VM_IP_ADDRESS>` with the private IP of your Dokploy VM:
+
+   ```
+   <VM_IP_ADDRESS> myapp.local
+   ```
+
+2. In Dokploy, go to your project settings and add `myapp.local` as a domain.
+3. Now, in your web browser, navigate to `http://myapp.local`. You should see your deployed Next.js sample app!
+
+## Conclusion
+
+You now have Dokploy running on an Unraid VM, and have successfully deployed a sample application! Next up wil be setting up a Cloudflare Tunnel to access Dokploy and your apps securely over the internet. Stay tuned!
