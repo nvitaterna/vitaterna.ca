@@ -1,5 +1,5 @@
 ---
-pubDatetime: 2025-11-17
+pubDatetime: 2025-11-16
 title: API Errors on Homepage Dashboard
 slug: api-errors-on-homepage-dashboard
 draft: false
@@ -19,12 +19,7 @@ To resolve this issue, you will need to disable rate-limiting on your DNS server
 
 For example, in AdGuard Home, you can disable rate-limiting by navigating to the "Settings" tab, then selecting "DNS Settings". From there, you can uncheck the "Enable Rate Limiting" option:
 
-<Image
-  src="/tidbits/api-errors-on-homepage-dashboard/rate-limiting.png"
-  width="750"
-  height="465"
-  className="mx-auto rounded-lg"
-/>
+![AdGuard rate limit setting](/tidbits/api-errors-on-homepage-dashboard/rate-limiting.png
 
 Alternatively, you can add your homepage dashboard's server IP address to the whitelist for rate-limiting.
 
