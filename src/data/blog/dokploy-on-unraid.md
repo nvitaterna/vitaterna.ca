@@ -1,7 +1,6 @@
 ---
 pubDatetime: 2025-11-13
 modDateTime: 2025-11-13
-author: Nicolas Vitaterna
 title: Setting up Dokploy on Unraid
 slug: dokploy-on-unraid
 featured: true

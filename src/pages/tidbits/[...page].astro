@@ -1,0 +1,32 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
+import Main from "@/layouts/Main.astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import TidbitCard from "@/components/TidbitCard.astro";
+import Pagination from "@/components/Pagination.astro";
+import getSortedTidbits from "@/utils/getSortedTidbits";
+import { SITE } from "@/config";
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const tidbits = await getCollection("tidbit", ({ data }) => !data.draft);
+  return paginate(getSortedTidbits(tidbits), { pageSize: SITE.tidbitPerPage });
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.props;
+---
+
+<Layout title={`Tidbits | ${SITE.title}`}>
+  <Header />
+  <Main pageTitle="Tidbits" pageDesc="Little problems and solutions.">
+    <ul>
+      {page.data.map(data => <TidbitCard {...data} />)}
+    </ul>
+  </Main>
+
+  <Pagination {page} />
+
+  <Footer noMarginTop={page.lastPage > 1} />
+</Layout>

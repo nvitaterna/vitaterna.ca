@@ -18,3 +18,10 @@ export async function generateOgImageForSite() {
   const svg = await siteOgImage();
   return svgBufferToPngBuffer(svg);
 }
+
+export async function generateOgImageForTidbit(
+  tidbit: CollectionEntry<"tidbit">
+) {
+  const svg = await postOgImage(tidbit);
+  return svgBufferToPngBuffer(svg);
+}
