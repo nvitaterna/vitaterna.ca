@@ -1,7 +1,6 @@
 ---
 pubDatetime: 2023-04-02
 modDateTime: 2023-04-02
-author: Nicolas Vitaterna
 title: Upgrading to 10 Gigabit Ethernet
 slug: upgrade-to-10-gigabit
 featured: true

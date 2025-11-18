@@ -1,0 +1,27 @@
+---
+import { type CollectionEntry, getCollection } from "astro:content";
+import TidbitDetails from "@/layouts/TidbitDetails.astro";
+import getSortedTidbits from "@/utils/getSortedTidbits";
+import { getPath } from "@/utils/getPath";
+
+export interface Props {
+  tidbit: CollectionEntry<"tidbit">;
+}
+
+export async function getStaticPaths() {
+  const tidbits = await getCollection("tidbit", ({ data }) => !data.draft);
+  const tidbitResult = tidbits.map(tidbit => ({
+    params: { slug: getPath(tidbit.id, tidbit.filePath, false) },
+    props: { tidbit },
+  }));
+
+  return tidbitResult;
+}
+
+const { tidbit } = Astro.props;
+
+const tidbits = await getCollection("tidbit");
+const sortedTidbits = getSortedTidbits(tidbits);
+---
+
+<TidbitDetails tidbit={tidbit} tidbits={sortedTidbits} />

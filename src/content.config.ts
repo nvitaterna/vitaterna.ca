@@ -3,6 +3,7 @@ import { glob } from "astro/loaders";
 import { SITE } from "@/config";
 
 export const BLOG_PATH = "src/data/blog";
+export const TIDBIT_PATH = "src/data/tidbit";
 
 const blog = defineCollection({
   loader: glob({ pattern: "**/[^_]*.md", base: `./${BLOG_PATH}` }),
@@ -23,4 +24,18 @@ const blog = defineCollection({
     }),
 });
 
-export const collections = { blog };
+const tidbit = defineCollection({
+  loader: glob({ pattern: "**/[^_]*.md", base: `./${TIDBIT_PATH}` }),
+  schema: ({ image }) =>
+    z.object({
+      author: z.string().default(SITE.author),
+      pubDatetime: z.date(),
+      title: z.string(),
+      draft: z.boolean().optional(),
+      tags: z.array(z.string()).default(["others"]),
+      ogImage: image().or(z.string()).optional(),
+      timezone: z.string().optional(),
+    }),
+});
+
+export const collections = { blog, tidbit };
