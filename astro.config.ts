@@ -50,11 +50,6 @@ export default defineConfig({
   },
   env: {
     schema: {
-      PUBLIC_GOOGLE_SITE_VERIFICATION: envField.string({
-        access: "public",
-        context: "client",
-        optional: true,
-      }),
       ANALYTICS_DISABLED: envField.boolean({
         access: "secret",
         context: "server",
