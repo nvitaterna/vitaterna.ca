@@ -3,6 +3,7 @@ import { ClientRouter } from "astro:transitions";
 import { PUBLIC_GOOGLE_SITE_VERIFICATION } from "astro:env/client";
 import { SITE } from "@/config";
 import "@/styles/global.css";
+import { ANALYTICS_DISABLED } from 'astro:env/server'
 
 export interface Props {
   title?: string;
@@ -29,6 +30,9 @@ const {
 } = Astro.props;
 
 const socialImageURL = new URL(ogImage, Astro.url);
+
+// show analytics only when in production and ANALYTICS_DISABLED is not set to 'true'
+const showAnalytics = import.meta.env.PROD && !ANALYTICS_DISABLED;
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -131,7 +135,7 @@ const structuredData = {
     <ClientRouter />
 
     <script is:inline src="/toggle-theme.js"></script>
-    <script defer src="https://u.vitaterna.ca/script.js" data-website-id="d04a4b0d-ead4-43f5-b295-a38fbc949208"></script>
+    {showAnalytics ? <script defer src="https://u.vitaterna.ca/script.js" data-website-id="d04a4b0d-ead4-43f5-b295-a38fbc949208"></script> : null}
   </head>
   <body>
     <slot />

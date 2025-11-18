@@ -55,6 +55,11 @@ export default defineConfig({
         context: "client",
         optional: true,
       }),
+      ANALYTICS_DISABLED: envField.boolean({
+        access: "secret",
+        context: "server",
+        optional: true,
+      }),
     },
   },
   experimental: {
