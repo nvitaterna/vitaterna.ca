@@ -1,0 +1,10 @@
+services:
+  web:
+    image: ghcr.io/nvitaterna/vitaterna.ca:latest
+    pull_policy: always
+    container_name: vitaterna.ca
+    restart: unless-stopped
+    environment:
+      - TZ=America/Toronto
+    ports:
+      - "127.0.0.1:3000:80"
